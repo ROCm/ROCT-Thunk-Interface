@@ -198,3 +198,50 @@ hsaKmtUnmapMemoryToGPU(
 
 	return HSAKMT_STATUS_SUCCESS;
 }
+
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtMapGraphicHandle(
+                HSAuint32          NodeId,			//IN
+                HSAuint64          GraphicDeviceHandle,		//IN
+                HSAuint64          GraphicResourceHandle,	//IN
+                HSAuint64          GraphicResourceOffset,	//IN
+                HSAuint64          GraphicResourceSize,		//IN
+                HSAuint64*         FlatMemoryAddress            //OUT
+                )
+{
+	CHECK_KFD_OPEN();
+	HSAKMT_STATUS result;
+	uint32_t gpu_id;
+	void *graphic_handle;
+
+	if (GraphicResourceOffset != 0)
+		return HSAKMT_STATUS_NOT_IMPLEMENTED;
+
+	result = validate_nodeid(NodeId, &gpu_id);
+	if (result != HSAKMT_STATUS_SUCCESS)
+		return result;
+
+	graphic_handle = fmm_open_graphic_handle(gpu_id,
+						GraphicDeviceHandle,
+						GraphicResourceHandle,
+						GraphicResourceSize);
+
+	*FlatMemoryAddress = PORT_VPTR_TO_UINT64(graphic_handle);
+
+	if (*FlatMemoryAddress)
+		return HSAKMT_STATUS_SUCCESS;
+	else
+		return HSAKMT_STATUS_NO_MEMORY;
+}
+
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtUnmapGraphicHandle(
+                HSAuint32          NodeId,			//IN
+                HSAuint64          FlatMemoryAddress,           //IN
+                HSAuint64 	   SizeInBytes			//IN
+                )
+{
+	return hsaKmtFreeMemory(PORT_UINT64_TO_VPTR(FlatMemoryAddress), SizeInBytes);
+}

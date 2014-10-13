@@ -49,6 +49,10 @@ HSAKMT_STATUS fmm_init_process_apertures(void);
  */
 void* fmm_allocate_scratch(uint32_t gpu_id, uint64_t MemorySizeInBytes);
 void* fmm_allocate_device(uint32_t gpu_id, uint64_t MemorySizeInBytes);
+void* fmm_open_graphic_handle(uint32_t gpu_id,
+        int32_t graphic_device_handle,
+        uint32_t graphic_handle,
+        uint64_t MemorySizeInBytes);
 void fmm_print(uint32_t node);
 bool fmm_is_inside_some_aperture(void* address);
 void fmm_release(void* address, HSAuint64 MemorySizeInBytes);
