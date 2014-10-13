@@ -51,7 +51,7 @@ void* fmm_allocate_scratch(uint32_t gpu_id, uint64_t MemorySizeInBytes);
 void* fmm_allocate_device(uint32_t gpu_id, uint64_t MemorySizeInBytes);
 void fmm_print(uint32_t node);
 bool fmm_is_inside_some_aperture(void* address);
-int fmm_release(void* address, HSAuint64 MemorySizeInBytes);
+void fmm_release(void* address, HSAuint64 MemorySizeInBytes);
 
 /* Topology interface*/
 HSAKMT_STATUS fmm_node_added(HSAuint32 gpu_id);

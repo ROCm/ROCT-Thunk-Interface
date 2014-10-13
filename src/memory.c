@@ -115,6 +115,13 @@ hsaKmtAllocMemory(
 		else
 			return HSAKMT_STATUS_NO_MEMORY;
 	}
+	else if(!MemFlags.ui32.HostAccess && MemFlags.ui32.NonPaged){
+	    *MemoryAddress = fmm_allocate_device(gpu_id, SizeInBytes);
+	    if (*MemoryAddress)
+	        return HSAKMT_STATUS_SUCCESS;
+	    else
+	        return HSAKMT_STATUS_NO_MEMORY;
+	}
 	else
 		return HSAKMT_STATUS_INVALID_PARAMETER;
 
@@ -131,8 +138,7 @@ hsaKmtFreeMemory(
 	CHECK_KFD_OPEN();
 
 	if (fmm_is_inside_some_aperture(MemoryAddress)){
-		if (fmm_release( MemoryAddress, SizeInBytes))
-			hsa_status = HSAKMT_STATUS_INVALID_PARAMETER;
+		fmm_release( MemoryAddress, SizeInBytes);
 	}
 	else
 		free(MemoryAddress);
