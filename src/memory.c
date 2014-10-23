@@ -134,16 +134,10 @@ hsaKmtFreeMemory(
     HSAuint64   SizeInBytes         //IN
     )
 {
-	HSAKMT_STATUS hsa_status = HSAKMT_STATUS_SUCCESS;
 	CHECK_KFD_OPEN();
 
-	if (fmm_is_inside_some_aperture(MemoryAddress)){
-		fmm_release( MemoryAddress, SizeInBytes);
-	}
-	else
-		free(MemoryAddress);
-
-	return hsa_status;
+	fmm_release( MemoryAddress, SizeInBytes);
+	return HSAKMT_STATUS_SUCCESS;
 }
 
 HSAKMT_STATUS
@@ -179,13 +173,16 @@ hsaKmtMapMemoryToGPU(
 {
 	CHECK_KFD_OPEN();
 
-	// We don't support GPUVM in the stub, there should never be a request for a GPUVA.
 	if (AlternateVAGPU)
-	{
 		*AlternateVAGPU = 0;
+
+	if (fmm_map_to_gpu(MemoryAddress, MemorySizeInBytes, AlternateVAGPU)){
+		return HSAKMT_STATUS_SUCCESS;
+	}
+	else {
+		return HSAKMT_STATUS_NOT_IMPLEMENTED;
 	}
 
-	return HSAKMT_STATUS_SUCCESS;
 }
 
 HSAKMT_STATUS
@@ -195,8 +192,11 @@ hsaKmtUnmapMemoryToGPU(
     )
 {
 	CHECK_KFD_OPEN();
+	if (fmm_unmap_from_gpu(MemoryAddress))
+		return HSAKMT_STATUS_SUCCESS;
+	else
+		return HSAKMT_STATUS_NOT_IMPLEMENTED;
 
-	return HSAKMT_STATUS_SUCCESS;
 }
 
 HSAKMT_STATUS
@@ -243,5 +243,5 @@ hsaKmtUnmapGraphicHandle(
                 HSAuint64 	   SizeInBytes			//IN
                 )
 {
-	return hsaKmtFreeMemory(PORT_UINT64_TO_VPTR(FlatMemoryAddress), SizeInBytes);
+	return hsaKmtUnmapMemoryToGPU(PORT_UINT64_TO_VPTR(FlatMemoryAddress));
 }
