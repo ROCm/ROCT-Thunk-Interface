@@ -128,18 +128,6 @@ struct kfd_ioctl_get_process_apertures_args {
 	uint32_t pad;
 };
 
-struct kfd_ioctl_create_vidmem_args {
-	uint64_t va_addr;	/* to KFD */
-	uint64_t size;		/* to KFD */
-	uint64_t handle;	/* from KFD */
-	uint32_t gpu_id;	/* to KFD */
-	uint32_t pad;
-};
-
-struct kfd_ioctl_destroy_vidmem_args {
-	uint64_t handle;	/* to KFD */
-};
-
 #define MAX_ALLOWED_NUM_POINTS    100
 #define MAX_ALLOWED_AW_BUFF_SIZE 4096
 #define MAX_ALLOWED_WAC_BUFF_SIZE  128
@@ -263,8 +251,6 @@ struct kfd_ioctl_unmap_memory_from_gpu_args {
 #define KFD_IOC_DBG_UNREGISTER		_IOW(KFD_IOC_MAGIC, 9, struct kfd_ioctl_dbg_unregister_args)
 #define KFD_IOC_DBG_ADDRESS_WATCH	_IOW(KFD_IOC_MAGIC, 10, struct kfd_ioctl_dbg_address_watch_args)
 #define KFD_IOC_DBG_WAVE_CONTROL	_IOW(KFD_IOC_MAGIC, 11, struct kfd_ioctl_dbg_wave_control_args)
-#define KFD_IOC_CREATE_VIDMEM		_IOWR(KFD_IOC_MAGIC, 12, struct kfd_ioctl_create_vidmem_args)
-#define KFD_IOC_DESTROY_VIDMEM		_IOW(KFD_IOC_MAGIC, 13, struct kfd_ioctl_destroy_vidmem_args)
 #define KFD_IOC_MAP_MEMORY_TO_GPU	_IOWR(KFD_IOC_MAGIC, 12, struct kfd_ioctl_map_memory_to_gpu_args)
 #define KFD_IOC_UNMAP_MEMORY_FROM_GPU	_IOWR(KFD_IOC_MAGIC, 13, struct kfd_ioctl_unmap_memory_from_gpu_args)
 #define KFD_IOC_CREATE_EVENT		_IOWR(KFD_IOC_MAGIC, 14, struct kfd_ioctl_create_event_args)
