@@ -133,6 +133,7 @@ struct kfd_ioctl_create_vidmem_args {
 	uint64_t size;		/* to KFD */
 	uint64_t handle;	/* from KFD */
 	uint32_t gpu_id;	/* to KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_destroy_vidmem_args {
@@ -145,10 +146,12 @@ struct kfd_ioctl_destroy_vidmem_args {
 
 struct kfd_ioctl_dbg_register_args {
 	uint32_t gpu_id;		/* to KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_dbg_unregister_args {
 	uint32_t gpu_id;		/* to KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_dbg_address_watch_args {
@@ -181,24 +184,26 @@ struct kfd_ioctl_dbg_wave_control_args {
 struct kfd_ioctl_create_event_args {
 	uint64_t event_trigger_address;	/* from KFD - signal events only */
 	uint32_t event_trigger_data;	/* from KFD - signal events only */
-
 	uint32_t event_type;		/* to KFD */
 	uint32_t auto_reset;		/* to KFD */
 	uint32_t node_id;		/* to KFD - only valid for certain event types */
-
 	uint32_t event_id;		/* from KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_destroy_event_args {
 	uint32_t event_id;		/* to KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_set_event_args {
 	uint32_t event_id;		/* to KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_reset_event_args {
 	uint32_t event_id;		/* to KFD */
+	uint32_t pad;
 };
 
 struct kfd_ioctl_wait_events_args {
@@ -206,7 +211,6 @@ struct kfd_ioctl_wait_events_args {
 	uint32_t num_events;		/* to KFD */
 	uint32_t wait_for_all;		/* to KFD */
 	uint32_t timeout;		/* to KFD */
-
 	uint32_t wait_result;		/* from KFD */
 };
 
@@ -216,6 +220,7 @@ struct kfd_ioctl_open_graphic_handle_args {
 	uint32_t gpu_id;		/* to KFD */
 	int graphic_device_fd;		/* to KFD */
 	uint32_t graphic_handle;	/* to KFD */
+	uint32_t pad;
 };
 
 #define KFD_IOC_MAGIC 'K'
