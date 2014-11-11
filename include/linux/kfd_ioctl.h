@@ -154,6 +154,18 @@ struct kfd_ioctl_dbg_wave_control_args {
 	unsigned char content[0];
 };
 
+struct kfd_ioctl_pmc_acquire_access_args {
+	uint64_t trace_id;		/* to KFD */
+	uint32_t gpu_id;		/* to KFD */
+	uint32_t pad;
+};
+
+struct kfd_ioctl_pmc_release_access_args {
+	uint64_t trace_id;		/* to KFD */
+	uint32_t gpu_id;		/* to KFD */
+	uint32_t pad;
+};
+
 /* Matching HSA_EVENTTYPE */
 #define KFD_IOC_EVENT_SIGNAL		0
 #define KFD_IOC_EVENT_NODECHANGE	1
@@ -259,5 +271,8 @@ struct kfd_ioctl_unmap_memory_from_gpu_args {
 #define KFD_IOC_RESET_EVENT		_IOW(KFD_IOC_MAGIC, 17, struct kfd_ioctl_reset_event_args)
 #define KFD_IOC_WAIT_EVENTS		_IOWR(KFD_IOC_MAGIC, 18, struct kfd_ioctl_wait_events_args)
 #define KFD_IOC_OPEN_GRAPHIC_HANDLE	_IOWR(KFD_IOC_MAGIC, 19, struct kfd_ioctl_open_graphic_handle_args)
+
+#define KFD_IOC_PMC_ACQUIRE_ACCESS	_IOW(KFD_IOC_MAGIC, 98, struct kfd_ioctl_pmc_acquire_access_args)
+#define KFD_IOC_PMC_RELEASE_ACCESS	_IOW(KFD_IOC_MAGIC, 99, struct kfd_ioctl_pmc_release_access_args)
 
 #endif
