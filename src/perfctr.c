@@ -239,6 +239,7 @@ hsaKmtPmcAcquireTraceAccess(
     )
 {
     struct perf_trace *trace;
+    struct kfd_ioctl_pmc_acquire_access_args args;
 
     if (TraceId == 0)
         return HSAKMT_STATUS_INVALID_PARAMETER;
@@ -247,6 +248,12 @@ hsaKmtPmcAcquireTraceAccess(
 
     if (trace->magic4cc != HSA_PERF_MAGIC4CC)
         return HSAKMT_STATUS_INVALID_HANDLE;
+
+    args.gpu_id = trace->gpu_id;
+    args.trace_id = TraceId;
+
+    if (kfd_ioctl(KFD_IOC_PMC_ACQUIRE_ACCESS, &args) != 0)
+        return HSAKMT_STATUS_UNAVAILABLE;
 
     return HSAKMT_STATUS_SUCCESS;
 }
@@ -265,6 +272,7 @@ hsaKmtPmcReleaseTraceAccess(
     )
 {
     struct perf_trace *trace;
+    struct kfd_ioctl_pmc_release_access_args args;
 
     if (TraceId == 0)
         return HSAKMT_STATUS_INVALID_PARAMETER;
@@ -273,6 +281,12 @@ hsaKmtPmcReleaseTraceAccess(
 
     if (trace->magic4cc != HSA_PERF_MAGIC4CC)
         return HSAKMT_STATUS_INVALID_HANDLE;
+
+    args.gpu_id = trace->gpu_id;
+    args.trace_id = TraceId;
+
+    if (kfd_ioctl(KFD_IOC_PMC_RELEASE_ACCESS, &args) != 0)
+        return HSAKMT_STATUS_ERROR;
 
     return HSAKMT_STATUS_SUCCESS;
 }
