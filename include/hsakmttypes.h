@@ -420,7 +420,27 @@ typedef struct _HsaMemFlags
                                           // when setting this entry to 1. Scratch allocation may fail due to limited
                                           // resources. Application code is required to work without any allocation.
                                           // Allocation fails on any node without GPU function.
-            unsigned int Reserved    : 22;
+            unsigned int AtomicAccessFull: 1; // default = 0: If set, the memory will be allocated and mapped to allow 
+                                              // atomic ops processing. On AMD APU, this will use the ATC path on system 
+                                              // memory, irrespective of the NonPaged flag setting (= if NonPaged is set, 
+                                              // the memory is pagelocked but mapped through IOMMUv2 instead of GPUVM). 
+                                              // All atomic ops must be supported on this memory.
+            unsigned int AtomicAccessPartial: 1; // default = 0: See above for AtomicAccessFull description, however 
+                                                 // focused on AMD discrete GPU that support PCIe atomics; the memory 
+                                                 // allocation is mapped to allow for PCIe atomics to operate on system 
+                                                 // memory, irrespective of NonPaged set or the presence of an ATC path 
+                                                 // in the system. The atomic operations supported are limited to SWAP, 
+                                                 // CompareAndSwap (CAS) and FetchAdd (this PCIe op allows both atomic 
+                                                 // increment and decrement via 2-complement arithmetic), which are the 
+                                                 // only atomic ops directly supported in PCI Express.
+                                                 // On AMD APU, setting this flag will allocate the same type of memory 
+                                                 // as AtomicAccessFull, but it will be considered compatible with 
+                                                 // discrete GPU atomic operations access.
+            unsigned int ExecuteAccess: 1; // default = 0: Identifies if memory is primarily used for data or accessed 
+                                           // for executable code (e.g. queue memory) by the host CPU or the device. 
+                                           // Influences the page attribute setting within the allocation
+            unsigned int Reserved    : 19;
+
         } ui32;
         HSAuint32 Value;
     };
@@ -619,6 +639,7 @@ typedef enum _HSA_EVENTTYPE
     HSA_EVENTTYPE_DEBUG_EVENT                = 5, //GPU signal for debugging
     HSA_EVENTTYPE_PROFILE_EVENT              = 6, //GPU signal for profiling
     HSA_EVENTTYPE_QUEUE_EVENT                = 7, //GPU signal queue idle state (EOP pm4)
+    HSA_EVENTTYPE_MEMORY                     = 8, //GPU signal for signaling memory access faults and memory subsystem issues
     //...
     HSA_EVENTTYPE_MAXID,
     HSA_EVENTTYPE_TYPE_SIZE                  = 0xFFFFFFFF
@@ -674,20 +695,54 @@ typedef struct _HsaDeviceStateChange
     HSA_EVENTTYPE_DEVICESTATECHANGE_FLAGS Flags;    // event flags
 } HsaDeviceStateChange;
 
+//
+// Sub-definitions for various event types: Memory exception
+//
+
+typedef enum _HSA_EVENTID_MEMORYFLAGS
+{
+    HSA_EVENTID_MEMORY_RECOVERABLE           = 0, //access fault, recoverable after page adjustment
+    HSA_EVENTID_MEMORY_FATAL_PROCESS         = 1, //memory access requires process context destruction, unrecoverable
+    HSA_EVENTID_MEMORY_FATAL_VM              = 2, //memory access requires all GPU VA context destruction, unrecoverable
+} HSA_EVENTID_MEMORYFLAGS;
+
+typedef struct _HsaAccessAttributeFailure
+{
+    unsigned int NotPresent  : 1;  // Page not present or supervisor privilege 
+    unsigned int ReadOnly    : 1;  // Write access to a read-only page
+    unsigned int NoExecute   : 1;  // Execute access to a page marked NX
+    unsigned int GpuAccess   : 1;  // Host access only
+    unsigned int ECC         : 1;  // ECC failure (if supported by HW)
+    unsigned int Reserved    : 27; // must be 0
+} HsaAccessAttributeFailure;
+
+// data associated with HSA_EVENTID_MEMORY
+typedef struct _HsaMemoryAccessFault
+{
+    HSAuint32                       NodeId;             // H-NUMA node that contains the device where the memory access occurred
+    HSAuint64                       VirtualAddress;     // virtual address this occurred on
+    HsaAccessAttributeFailure       Failure;            // failure attribute
+    HSA_EVENTID_MEMORYFLAGS         Flags;              // event flags
+} HsaMemoryAccessFault;
 
 typedef struct _HsaEventData
 {
     HSA_EVENTTYPE   EventType;      //event type
+
     union
     {
         // return data associated with HSA_EVENTTYPE_SIGNAL and other events
-        HsaSyncVar        SyncVar;
+        HsaSyncVar              SyncVar;
 
         // data associated with HSA_EVENTTYPE_NODE_CHANGE
-        HsaNodeChange     NodeChangeState;
+        HsaNodeChange           NodeChangeState;
 
         // data associated with HSA_EVENTTYPE_DEVICE_STATE_CHANGE
-        HsaDeviceStateChange DeviceState;
+        HsaDeviceStateChange    DeviceState;
+
+        // data associated with HSA_EVENTTYPE_MEMORY
+        HsaMemoryAccessFault    MemoryAccessFault;
+
     } EventData;
 
     // the following data entries are internal to the KFD & thunk itself.
