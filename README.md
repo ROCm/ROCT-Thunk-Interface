@@ -1,6 +1,6 @@
 ### Boltzmann Thunk Library
 
-This repository includes the user-mode API interfaces used to interact with the Boltzmann KFD driver. Currently supported agents include only the AMD/ATI Fiji family of discrete GPUs.
+This repository includes the user-mode API interfaces used to interact with the Boltzmann KFD driver. Currently supported agents include only the AMD/ATI Fiji family of discrete GPUs. Support for AMD/ATI Hawaii discrete GPUs was added in the 1.2.0 release.
 
 #### Boltzmann Kernel Driver
 
