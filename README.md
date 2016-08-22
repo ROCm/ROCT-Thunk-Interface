@@ -2,7 +2,7 @@
 
 This repository includes the user-mode API interfaces used to interact with the Boltzmann KFD driver. Currently supported agents include only the AMD/ATI Fiji family of discrete GPUs. Support for AMD/ATI Hawaii discrete GPUs was added in the 1.2.0 release.
 
-#### Boltzmann Kernel Driver
+#### ROCm Kernel Driver
 
 The thunk is not a standalone product and requires that you have the correct KFD installed. We recommend reading the full compatibility and installation details which are available in the ROCK github:
 https://github.com/RadeonOpenCompute/ROCK-Radeon-Open-Compute-Kernel-Driver
@@ -22,6 +22,11 @@ A simple make-based system is available for building thunk. The following are th
     make rpm
     make clean
 ```
+
+##### Note regarding libhsakmt compatibility
+Please note that the libhsakmt library in this project
+(ROCT-Thunk-Interface) is NOT compatible with amdkfd that is
+distributed as part of the mainline Linux kernel from 3.19 and onward.
 
 #### Disclaimer
 
