@@ -50,7 +50,7 @@ set ( CMAKE_CXX_FLAGS "-fPIC -W -Wall -Wextra -Werror -Wno-unused-parameter -Wfo
 set ( HSAKMT_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/libhsakmt.ver" )
 
 ## Linker Flags
-set ( CMAKE_SHARED_LINKER_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(VERSION_MAJOR) -Wl,-z,nodelete" )
+set ( CMAKE_SHARED_LINKER_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(VERSION_MAJOR) -Wl,-z,nodelete -Wl,--no-undefined" )
 
 ## Source files
 set ( HSAKMT_SRC ${HSAKMT_SRC} src/debug.c )
