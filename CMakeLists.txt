@@ -53,6 +53,7 @@ set ( HSAKMT_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/libhsakmt.ver" )
 set ( CMAKE_SHARED_LINKER_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(VERSION_MAJOR) -Wl,-z,nodelete" )
 
 ## Source files
+set ( HSAKMT_SRC ${HSAKMT_SRC} src/debug.c )
 set ( HSAKMT_SRC ${HSAKMT_SRC} src/events.c )
 set ( HSAKMT_SRC ${HSAKMT_SRC} src/fmm.c )
 set ( HSAKMT_SRC ${HSAKMT_SRC} src/globals.c )
