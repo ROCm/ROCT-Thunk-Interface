@@ -41,6 +41,7 @@
 	.base = (void *) base_value,				\
 	.limit = (void *) limit_value,				\
 	.align = PAGE_SIZE,					\
+	.guard_pages = 1,					\
 	.vm_ranges = NULL,					\
 	.vm_objects = NULL,					\
 	.fmm_mutex = PTHREAD_MUTEX_INITIALIZER			\
@@ -96,6 +97,7 @@ typedef struct {
 	void *base;
 	void *limit;
 	uint64_t align;
+	uint32_t guard_pages;
 	vm_area_t *vm_ranges;
 	vm_object_t *vm_objects;
 	pthread_mutex_t fmm_mutex;
@@ -482,7 +484,8 @@ static bool aperture_is_valid(void *app_base, void *app_limit)
  */
 static uint64_t vm_align_area_size(manageble_aperture_t *app, uint64_t size)
 {
-	return ALIGN_UP(size + PAGE_SIZE, app->align);
+	return ALIGN_UP(size + (uint64_t)app->guard_pages * PAGE_SIZE,
+			app->align);
 }
 
 /*
@@ -1401,8 +1404,8 @@ HSAKMT_STATUS fmm_init_process_apertures(unsigned int NumNodes)
 	HsaNodeProperties props;
 	struct kfd_process_device_apertures * process_apertures;
 	HSAKMT_STATUS ret = HSAKMT_STATUS_SUCCESS;
-	char *disableCache;
-	char *pagedUserptr;
+	char *disableCache, *pagedUserptr, *guardPagesStr;
+	unsigned guardPages = 1;
 	struct pci_access *pacc;
 
 	/* If HSA_DISABLE_CACHE is set to a non-0 value, disable caching */
@@ -1414,6 +1417,11 @@ HSAKMT_STATUS fmm_init_process_apertures(unsigned int NumNodes)
 	 * enable userptr for all paged memory allocations */
 	pagedUserptr = getenv("HSA_USERPTR_FOR_PAGED_MEM");
 	svm.userptr_for_paged_mem = (pagedUserptr && strcmp(pagedUserptr, "0"));
+
+	/* Specify number of guard pages for SVM apertures, default is 1 */
+	guardPagesStr = getenv("HSA_SVM_GUARD_PAGES");
+	if (!guardPagesStr || sscanf(guardPagesStr, "%u", &guardPages) != 1)
+		guardPages = 1;
 
 	/* Trade off - NumNodes includes GPU nodes + CPU Node. So in
 	 *	systems with CPU node, slightly more memory is allocated than
@@ -1446,6 +1454,7 @@ HSAKMT_STATUS fmm_init_process_apertures(unsigned int NumNodes)
 			pthread_mutex_init(&gpu_mem[gpu_mem_count].scratch_aperture.fmm_mutex, NULL);
 			gpu_mem[gpu_mem_count].gpuvm_aperture.align =
 				get_vm_alignment(props.DeviceId);
+			gpu_mem[gpu_mem_count].gpuvm_aperture.guard_pages = guardPages;
 			pthread_mutex_init(&gpu_mem[gpu_mem_count].gpuvm_aperture.fmm_mutex, NULL);
 			gpu_mem_count++;
 		}
@@ -1528,6 +1537,7 @@ HSAKMT_STATUS fmm_init_process_apertures(unsigned int NumNodes)
 				(uint64_t)svm.dgpu_aperture.base,
 				(uint64_t)svm.dgpu_aperture.limit);
 			svm.dgpu_aperture.align = vm_alignment;
+			svm.dgpu_aperture.guard_pages = guardPages;
 
 			/* Non-canonical per-ASIC GPUVM aperture does
 			 * not exist on dGPUs in GPUVM64 address mode */
@@ -1556,6 +1566,7 @@ HSAKMT_STATUS fmm_init_process_apertures(unsigned int NumNodes)
 				ret = HSAKMT_STATUS_ERROR;
 			}
 			svm.dgpu_alt_aperture.align = vm_alignment;
+			svm.dgpu_alt_aperture.guard_pages = guardPages;
 		}
 	}
 
