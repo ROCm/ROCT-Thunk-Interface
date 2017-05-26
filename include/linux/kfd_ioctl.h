@@ -318,20 +318,6 @@ struct kfd_ioctl_unmap_memory_from_gpu_args {
 	uint32_t pad;
 };
 
-/* TODO: remove this. It's only implemented for Kaveri and was never
- * upstreamed. There are no open-source users of this interface. It
- * has been superseded by the pair of get_dmabuf_info and
- * import_dmabuf, which is implemented for all supported GPUs.
- */
-struct kfd_ioctl_open_graphic_handle_args {
-	uint64_t va_addr;		/* to KFD */
-	uint64_t handle;		/* from KFD */
-	uint32_t gpu_id;		/* to KFD */
-	int graphic_device_fd;		/* to KFD */
-	uint32_t graphic_handle;	/* to KFD */
-	uint32_t pad;
-};
-
 struct kfd_ioctl_set_process_dgpu_aperture_args {
 	uint64_t dgpu_base;
 	uint64_t dgpu_limit;
@@ -526,11 +512,7 @@ struct kfd_ioctl_cross_memory_copy_args {
 #define AMDKFD_IOC_CROSS_MEMORY_COPY		\
 		AMDKFD_IOWR(0x1F, struct kfd_ioctl_cross_memory_copy_args)
 
-/* TODO: remove this */
-#define AMDKFD_IOC_OPEN_GRAPHIC_HANDLE		\
-		AMDKFD_IOWR(0x20, struct kfd_ioctl_open_graphic_handle_args)
-
 #define AMDKFD_COMMAND_START		0x01
-#define AMDKFD_COMMAND_END		0x21
+#define AMDKFD_COMMAND_END		0x20
 
 #endif
