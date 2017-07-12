@@ -1145,7 +1145,7 @@ static HSAKMT_STATUS topology_sysfs_get_cache_props(uint32_t node_id,
 		else if (strcmp(prop_name, "level") == 0)
 			props->CacheLevel = (uint32_t)prop_val;
 		else if (strcmp(prop_name, "size") == 0)
-			props->CacheSize = (uint32_t)prop_val;
+			props->CacheSize = (uint32_t)prop_val << 10;
 		else if (strcmp(prop_name, "cache_line_size") == 0)
 			props->CacheLineSize = (uint32_t)prop_val;
 		else if (strcmp(prop_name, "cache_lines_per_tag") == 0)
