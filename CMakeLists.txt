@@ -57,7 +57,7 @@ set ( CMAKE_C_FLAGS "-fPIC -W -Wall -Wextra -Werror -Wno-unused-parameter -Wform
 set ( HSAKMT_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/libhsakmt.ver" )
 
 ## Linker Flags
-set ( CMAKE_SHARED_LINKER_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(VERSION_MAJOR) -Wl,-z,nodelete" )
+set ( CMAKE_SHARED_LINKER_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(VERSION_MAJOR) -Wl,-z,nodelete -Wl,-no-undefined" )
 
 ## Source files
 set ( HSAKMT_SRC ${HSAKMT_SRC} src/debug.c )
@@ -85,8 +85,11 @@ add_library ( ${HSAKMT_TARGET} SHARED ${HSAKMT_SRC} )
 set_property ( TARGET ${HSAKMT_TARGET} PROPERTY VERSION "${LIB_VERSION_STRING}" )
 set_property ( TARGET ${HSAKMT_TARGET} PROPERTY SOVERSION "${BUILD_VERSION_MAJOR}" )
 
+find_package(PkgConfig)
+pkg_check_modules(PC_LIBPCI REQUIRED libpci)
+include_directories ( ${PC_LIBPCI_INCLUDEDIR} )
 target_link_libraries ( ${HSAKMT_TARGET}
-  pthread rt pci
+  pthread rt ${PC_LIBPCI_LIBRARIES}
 )
 
 ## If the library is a release, strip the target library
