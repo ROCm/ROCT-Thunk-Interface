@@ -875,7 +875,7 @@ static void fmm_release_scratch(uint32_t gpu_id)
 void *fmm_allocate_scratch(uint32_t gpu_id, uint64_t MemorySizeInBytes)
 {
 	manageable_aperture_t *aperture_phy;
-	struct kfd_ioctl_alloc_memory_of_scratch_args args;
+	struct kfd_ioctl_set_scratch_backing_va_args args;
 	int32_t gpu_mem_id;
 	void *mem = NULL;
 	uint64_t aligned_size = ALIGN_UP(MemorySizeInBytes, SCRATCH_ALIGN);
@@ -923,12 +923,11 @@ void *fmm_allocate_scratch(uint32_t gpu_id, uint64_t MemorySizeInBytes)
 	aperture_phy->base = mem;
 	aperture_phy->limit = VOID_PTR_ADD(mem, aligned_size-1);
 
-	/* Allocate memory from amdkfd (just programs SH_HIDDEN_PRIVATE_BASE) */
+	/* Program SH_HIDDEN_PRIVATE_BASE */
 	args.gpu_id = gpu_id;
-	args.size = MemorySizeInBytes;
 	args.va_addr = ((uint64_t)mem) >> 16;
 
-	if (kmtIoctl(kfd_fd, AMDKFD_IOC_ALLOC_MEMORY_OF_SCRATCH, &args)) {
+	if (kmtIoctl(kfd_fd, AMDKFD_IOC_SET_SCRATCH_BACKING_VA, &args)) {
 		fmm_release_scratch(gpu_id);
 		return NULL;
 	}
