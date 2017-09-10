@@ -14,13 +14,12 @@ https://github.com/RadeonOpenCompute/ROCK-Radeon-Open-Compute-Kernel-Driver
 
 #### Building the Thunk
 
-A simple make-based system is available for building thunk. The following are the supported targets:
+Building the thunk kernel-userspace API support library is done using the
+Meson/Ninja build system, which is used in the following way:
 
 ```bash
-    make
-    make deb
-    make rpm
-    make clean
+ $ meson builddir
+ $ ninja -C builddir
 ```
 
 #### Disclaimer
