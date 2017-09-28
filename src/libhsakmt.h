@@ -77,6 +77,7 @@ enum asic_family_type {
 	CHIP_FIJI,
 	CHIP_POLARIS10,
 	CHIP_POLARIS11,
+	CHIP_POLARIS12,
 	CHIP_VEGA10
 };
 #define IS_DGPU(chip) (((chip) >= CHIP_TONGA && (chip) <= CHIP_VEGA10) || \

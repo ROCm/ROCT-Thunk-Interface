@@ -171,7 +171,16 @@ static struct hsa_gfxip_table {
 	{ 0x6867, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 },
 	{ 0x6868, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 },
 	{ 0x686C, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 },
-	{ 0x687F, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 }
+	{ 0x687F, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 },
+	/* Polaris12 */
+	{ 0x6980, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x6981, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x6985, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x6986, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x6987, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x6995, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x6997, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	{ 0x699F, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 }
 };
 
 enum cache_type {

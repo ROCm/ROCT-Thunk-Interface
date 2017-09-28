@@ -92,6 +92,12 @@ struct device_info polaris11_device_info = {
 	.doorbell_size = DOORBELL_SIZE_GFX8,
 };
 
+struct device_info polaris12_device_info = {
+	.asic_family = CHIP_POLARIS12,
+	.eop_buffer_size = TONGA_PAGE_SIZE,
+	.doorbell_size = DOORBELL_SIZE_GFX8,
+};
+
 struct device_info vega10_device_info = {
 	.asic_family = CHIP_VEGA10,
 	.eop_buffer_size = 4096,
@@ -106,6 +112,7 @@ static struct device_info *dev_lookup_table[] = {
 	[CHIP_FIJI] = &fiji_device_info,
 	[CHIP_POLARIS10] = &polaris10_device_info,
 	[CHIP_POLARIS11] = &polaris11_device_info,
+	[CHIP_POLARIS12] = &polaris12_device_info,
 	[CHIP_VEGA10] = &vega10_device_info
 };
 
