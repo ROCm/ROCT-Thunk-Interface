@@ -740,7 +740,6 @@ static vm_object_t *fmm_allocate_memory_object(uint32_t gpu_id, void *mem,
 	args.size = ALIGN_UP(MemorySizeInBytes, aperture->align);
 
 	args.flags = flags |
-		KFD_IOC_ALLOC_MEM_FLAGS_NONPAGED |
 		KFD_IOC_ALLOC_MEM_FLAGS_NO_SUBSTITUTE;
 	args.va_addr = (uint64_t)mem;
 	if (!topology_is_dgpu(get_device_id_by_gpu_id(gpu_id)) &&
@@ -877,13 +876,13 @@ static uint32_t fmm_translate_hsa_to_ioc_flags(HsaMemFlags flags)
 
 	if (flags.ui32.AQLQueueMemory)
 		ioc_flags |= KFD_IOC_ALLOC_MEM_FLAGS_AQL_QUEUE_MEM;
-	if (flags.ui32.ReadOnly)
-		ioc_flags |= KFD_IOC_ALLOC_MEM_FLAGS_READONLY;
+	if (!flags.ui32.ReadOnly)
+		ioc_flags |= KFD_IOC_ALLOC_MEM_FLAGS_WRITABLE;
 	/* TODO: Since, ROCr interfaces doesn't allow caller to set page
 	 * permissions, mark all user allocations with exec permission.
 	 * Check for flags.ui32.ExecuteAccess once ROCr is ready.
 	 */
-	ioc_flags |= KFD_IOC_ALLOC_MEM_FLAGS_EXECUTE_ACCESS;
+	ioc_flags |= KFD_IOC_ALLOC_MEM_FLAGS_EXECUTABLE;
 	return ioc_flags;
 }
 
@@ -1076,6 +1075,7 @@ void *fmm_allocate_doorbell(uint32_t gpu_id, uint64_t MemorySizeInBytes,
 	/* Use fine-grained aperture */
 	aperture = &svm.dgpu_alt_aperture;
 	ioc_flags = KFD_IOC_ALLOC_MEM_FLAGS_DOORBELL |
+		    KFD_IOC_ALLOC_MEM_FLAGS_WRITABLE |
 		    KFD_IOC_ALLOC_MEM_FLAGS_COHERENT;
 
 	mem = __fmm_allocate_device(gpu_id, MemorySizeInBytes,
@@ -2473,7 +2473,8 @@ static HSAKMT_STATUS fmm_register_user_memory(void *addr, HSAuint64 size, vm_obj
 	/* Allocate BO, userptr address is passed in mmap_offset */
 	svm_addr = __fmm_allocate_device(gpu_id, aligned_size, aperture, 0,
 			 &aligned_addr, KFD_IOC_ALLOC_MEM_FLAGS_USERPTR |
-			 KFD_IOC_ALLOC_MEM_FLAGS_EXECUTE_ACCESS, &obj);
+			 KFD_IOC_ALLOC_MEM_FLAGS_WRITABLE |
+			 KFD_IOC_ALLOC_MEM_FLAGS_EXECUTABLE, &obj);
 	if (!svm_addr)
 		return HSAKMT_STATUS_ERROR;
 

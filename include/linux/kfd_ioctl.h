@@ -283,13 +283,12 @@ struct kfd_ioctl_set_scratch_backing_va_args {
 #define KFD_IOC_ALLOC_MEM_FLAGS_USERPTR		(1 << 2)
 #define KFD_IOC_ALLOC_MEM_FLAGS_DOORBELL	(1 << 3)
 /* Allocation flags: attributes/access options */
-#define KFD_IOC_ALLOC_MEM_FLAGS_NONPAGED	(1 << 31)
-#define KFD_IOC_ALLOC_MEM_FLAGS_READONLY	(1 << 30)
+#define KFD_IOC_ALLOC_MEM_FLAGS_WRITABLE	(1 << 31)
+#define KFD_IOC_ALLOC_MEM_FLAGS_EXECUTABLE	(1 << 30)
 #define KFD_IOC_ALLOC_MEM_FLAGS_PUBLIC		(1 << 29)
 #define KFD_IOC_ALLOC_MEM_FLAGS_NO_SUBSTITUTE	(1 << 28)
 #define KFD_IOC_ALLOC_MEM_FLAGS_AQL_QUEUE_MEM	(1 << 27)
-#define KFD_IOC_ALLOC_MEM_FLAGS_EXECUTE_ACCESS	(1 << 26)
-#define KFD_IOC_ALLOC_MEM_FLAGS_COHERENT	(1 << 25)
+#define KFD_IOC_ALLOC_MEM_FLAGS_COHERENT	(1 << 26)
 
 struct kfd_ioctl_alloc_memory_of_gpu_args {
 	uint64_t va_addr;	/* to KFD */
