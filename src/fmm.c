@@ -2079,19 +2079,18 @@ static int _fmm_map_to_gpu_scratch(uint32_t gpu_id, manageable_aperture_t *apert
 	/* allocate object within the scratch backing aperture */
 	if (!ret && !is_debugger) {
 		vm_object_t *obj = fmm_allocate_memory_object(
-			gpu_id, address, size, aperture,
-			NULL, KFD_IOC_ALLOC_MEM_FLAGS_VRAM);
+			gpu_id, address, size, aperture, NULL,
+			KFD_IOC_ALLOC_MEM_FLAGS_VRAM |
+			KFD_IOC_ALLOC_MEM_FLAGS_WRITABLE);
 		if (!obj)
 			return -1;
 	} else {
 		int map_fd = mmap_offset >= (1ULL<<40) ? kfd_fd :
 					gpu_mem[gpu_mem_id].drm_render_fd;
-		fmm_allocate_memory_object(gpu_id,
-					address,
-					size,
-					aperture,
-					&mmap_offset,
-					KFD_IOC_ALLOC_MEM_FLAGS_GTT);
+		fmm_allocate_memory_object(
+			gpu_id, address, size, aperture, &mmap_offset,
+			KFD_IOC_ALLOC_MEM_FLAGS_GTT |
+			KFD_IOC_ALLOC_MEM_FLAGS_WRITABLE);
 		mmap_ret = mmap(address, size,
 				PROT_READ | PROT_WRITE,
 				MAP_SHARED | MAP_FIXED, map_fd, mmap_offset);
