@@ -857,7 +857,7 @@ HSAKMT_STATUS topology_sysfs_get_node_props(uint32_t node_id,
 		}
 
 		/* Retrieve the CAL name of the node */
-		strncpy((char *)props->AMDName, hsa_gfxip->amd_name, sizeof(props->AMDName));
+		snprintf((char *)props->AMDName, sizeof(props->AMDName), "%s", hsa_gfxip->amd_name);
 		if (props->NumCPUCores) {
 			/* Is APU node */
 			ret = topology_get_cpu_model_name(props, true);
