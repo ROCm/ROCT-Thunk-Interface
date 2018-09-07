@@ -170,5 +170,11 @@ set ( CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/RPM/rpm_
 
 # CPACK_PACKAGING_INSTALL_PREFIX is needed in libhsakmt.pc.in
 configure_file ( libhsakmt.pc.in ${DEV_BUILD_DIR}/libhsakmt.pc @ONLY )
+install(FILES
+            ${DEV_BUILD_DIR}/libhsakmt.pc
+        DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+        COMPONENT
+            ${HSAKMT_COMPONENT}-pkgconfig)
 
 include ( CPack )
