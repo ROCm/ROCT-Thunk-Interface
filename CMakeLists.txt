@@ -116,8 +116,9 @@ endif ()
 
 ## Define default variable and variables for the optional build target hsakmt-dev
 set ( SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "Location of hsakmt source code." )
-set ( CMAKE_INSTALL_PREFIX "/opt/rocm"  CACHE STRING "Default installation directory." )
-set ( CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm"  CACHE STRING "Default packaging prefix." )
+set ( HSAKMT_INSTALL_PREFIX "/opt/rocm"  CACHE STRING "Default installation directory." )
+set ( HSAKMT_INSTALL_LIBDIR "hsakmt/lib"  CACHE STRING "Default installation directory." )
+set ( HSAKMT_PACKAGING_INSTALL_PREFIX "/opt/rocm"  CACHE STRING "Default packaging prefix." )
 set ( CPACK_GENERATOR "DEB;RPM"  CACHE STRING "Default packaging generators." )
 
 ## Specify build, install and package targets hsakmt-dev
@@ -126,9 +127,12 @@ configure_file ( hsakmt-dev.txt ${DEV_BUILD_DIR}/CMakeLists.txt @ONLY )
 add_custom_target ( build-dev
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR="${SOURCE_DIR}"
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+        -DCMAKE_INSTALL_PREFIX="${HSAKMT_INSTALL_PREFIX}"
+        -DCMAKE_INSTALL_LIBDIR="${HSAKMT_INSTALL_LIBDIR}"
         -DCPACK_RPM_PACKAGE_REQUIRES="hsakmt-roct"
-        -DCPACK_PACKAGING_INSTALL_PREFIX="${CPACK_PACKAGING_INSTALL_PREFIX}"
+        -DCPACK_PACKAGING_INSTALL_PREFIX="${HSAKMT_PACKAGING_INSTALL_PREFIX}"
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
     WORKING_DIRECTORY ${DEV_BUILD_DIR} )
 
 ## Custom targets for the devel package 
@@ -140,7 +144,6 @@ add_custom_target ( package-dev DEPENDS build-dev
 
 ## Add the install directives for the runtime library.
 install ( TARGETS ${HSAKMT_TARGET} DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-install ( FILES ${SOURCE_DIR}/LICENSE.md DESTINATION libhsakmt )
 
 ## Add the packaging directives for the runtime library.
 set ( CPACK_PACKAGE_NAME ${HSAKMT_PACKAGE} )
