@@ -67,7 +67,7 @@ endif ()
 set ( HSAKMT_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/libhsakmt.ver" )
 
 ## Linker Flags
-set ( CMAKE_SHARED_LINKER_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(PROJECT_VERSION_MAJOR) -Wl,-z,nodelete -Wl,-no-undefined" )
+set (HSAKMT_LINK_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.$(PROJECT_VERSION_MAJOR) -Wl,-z,nodelete -Wl,-no-undefined" )
 
 ## Source files
 set ( HSAKMT_SRC "src/debug.c"
@@ -92,6 +92,7 @@ include_directories ( ${CMAKE_CURRENT_SOURCE_DIR}/src )
 ## Add the library
 add_library ( ${HSAKMT_TARGET} SHARED ${HSAKMT_SRC} )
 target_compile_options(${HSAKMT_TARGET} PRIVATE ${HSAKMT_C_FLAGS})
+set_property(TARGET ${HSAKMT_TARGET} PROPERTY LINK_FLAGS ${HSAKMT_LINK_FLAGS})
 
 ## Set the VERSION and SOVERSION values
 set_property ( TARGET ${HSAKMT_TARGET} PROPERTY VERSION "${LIB_VERSION_STRING}" )
