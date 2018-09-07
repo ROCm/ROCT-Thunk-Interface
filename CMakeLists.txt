@@ -142,6 +142,14 @@ add_custom_target ( package-dev DEPENDS build-dev
 install ( TARGETS ${HSAKMT_TARGET} DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 install ( FILES ${SOURCE_DIR}/LICENSE.md DESTINATION libhsakmt )
 
+install(FILES
+            include/hsakmt.h
+            include/hsakmttypes.h
+        DESTINATION
+            ${CMAKE_INSTALL_INCLUDEDIR}/libhsakmt
+        COMPONENT
+            ${HSAKMT_COMPONENT}-header)
+
 ## Add the packaging directives for the runtime library.
 set ( CPACK_PACKAGE_NAME ${HSAKMT_PACKAGE} )
 set ( CPACK_PACKAGE_VENDOR "AMD" )
