@@ -30,7 +30,7 @@ set ( HSAKMT_PACKAGE "hsakmt-roct" )
 set ( HSAKMT_COMPONENT "lib${HSAKMT}" )
 set ( HSAKMT_TARGET "${HSAKMT}" )
 
-project ( ${HSAKMT_TARGET} )
+project ( ${HSAKMT_TARGET} VERSION 1.9.0)
 
 ## Set default module path if not already set
 if ( NOT DEFINED CMAKE_MODULE_PATH )
@@ -44,6 +44,8 @@ include ( GNUInstallDirs )
 ## Setup the package version.
 get_version ( "1.0.0" )
 
+# FIXME: The library version should not be tied to the project version!
+# There are rules how to bump version numbers for libraries.
 set ( BUILD_VERSION_MAJOR ${VERSION_MAJOR} )
 set ( BUILD_VERSION_MINOR ${VERSION_MINOR} )
 set ( BUILD_VERSION_PATCH ${VERSION_PATCH} )
@@ -164,5 +166,32 @@ set ( CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/RPM/rpm_
 
 # CPACK_PACKAGING_INSTALL_PREFIX is needed in libhsakmt.pc.in
 configure_file ( libhsakmt.pc.in ${DEV_BUILD_DIR}/libhsakmt.pc @ONLY )
+
+# Create cmake configuration files
+include(CMakePackageConfigHelpers)
+
+set(HSAKMT_LIBRARY_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} CACHE INTERNAL "")
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} CACHE INTERNAL "")
+
+configure_package_config_file(${PROJECT_NAME}-config.cmake.in
+                              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+                              PATH_VARS
+                                  INCLUDE_INSTALL_DIR LIB_INSTALL_DIR
+                              INSTALL_DESTINATION
+                                  ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+
+write_basic_package_version_file(${PROJECT_NAME}-config-version.cmake
+                                 COMPATIBILITY
+                                     AnyNewerVersion)
+
+install(FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+        DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        COMPONENT
+            devel)
 
 include ( CPack )
