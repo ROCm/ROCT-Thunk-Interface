@@ -135,6 +135,7 @@ VEGA20_TESTS_BLACKLIST=\
 "KFDExceptionTest.InvalidWriteAddress:"\
 "KFDQMTest.CreateQueueStressSingleThreaded:"\
 "KFDQMTest.GPUDoorbellWrite:"\
+"KFDQMTest.SdmaConcurrentCopies:"\
 "KFDMemoryTest.MemoryRegister"
 
 RAVEN_TESTS_BLACKLIST=\
