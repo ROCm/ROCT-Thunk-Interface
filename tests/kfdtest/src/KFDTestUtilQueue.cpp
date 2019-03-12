@@ -61,7 +61,10 @@ class AsyncMPSQ {
         /* Return only when all packets are consumed.
          * If there is any packet issues some IO operations, wait these IO to complete too.
          */
-        void Wait(void) { ASSERT_NE((HSAuint64)m_queue, NULL); m_queue->Wait4PacketConsumption(m_event); }
+        void Wait(void) {
+            ASSERT_NE((HSAuint64)m_queue, NULL);
+            m_queue->Wait4PacketConsumption(m_event, std::max((unsigned int)6000, g_TestTimeOut));
+        }
 
         /* Report the time used between packet [begin, end) in Global Counter on success.
          * Return 0 on failure.
@@ -323,7 +326,7 @@ class AsyncMPMQ {
  * SDMA queue helper functions.
  */
 
-bool sort_SDMACopyParams(SDMACopyParams &a1, SDMACopyParams &a2) {
+bool sort_SDMACopyParams(const SDMACopyParams &a1, const SDMACopyParams &a2) {
     if (a1.node != a2.node)
         return a1.node < a2.node;
     return a1.group < a2.group;

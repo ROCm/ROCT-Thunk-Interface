@@ -263,12 +263,12 @@ void clear_process_doorbells(void)
 }
 
 static HSAKMT_STATUS map_doorbell_apu(HSAuint32 NodeId, HSAuint32 gpu_id,
-				      HSAuint64 doorbell_offset)
+				      HSAuint64 doorbell_mmap_offset)
 {
 	void *ptr;
 
 	ptr = mmap(0, doorbells[NodeId].size, PROT_READ|PROT_WRITE,
-		   MAP_SHARED, kfd_fd, doorbell_offset);
+		   MAP_SHARED, kfd_fd, doorbell_mmap_offset);
 
 	if (ptr == MAP_FAILED)
 		return HSAKMT_STATUS_ERROR;
@@ -279,12 +279,12 @@ static HSAKMT_STATUS map_doorbell_apu(HSAuint32 NodeId, HSAuint32 gpu_id,
 }
 
 static HSAKMT_STATUS map_doorbell_dgpu(HSAuint32 NodeId, HSAuint32 gpu_id,
-				       HSAuint64 doorbell_offset)
+				       HSAuint64 doorbell_mmap_offset)
 {
 	void *ptr;
 
 	ptr = fmm_allocate_doorbell(gpu_id, doorbells[NodeId].size,
-				    doorbell_offset);
+				doorbell_mmap_offset);
 
 	if (!ptr)
 		return HSAKMT_STATUS_ERROR;
@@ -301,7 +301,7 @@ static HSAKMT_STATUS map_doorbell_dgpu(HSAuint32 NodeId, HSAuint32 gpu_id,
 }
 
 static HSAKMT_STATUS map_doorbell(HSAuint32 NodeId, HSAuint32 gpu_id,
-				  HSAuint64 doorbell_offset)
+				  HSAuint64 doorbell_mmap_offset)
 {
 	HSAKMT_STATUS status = HSAKMT_STATUS_SUCCESS;
 
@@ -315,16 +315,16 @@ static HSAKMT_STATUS map_doorbell(HSAuint32 NodeId, HSAuint32 gpu_id,
 			      &doorbells[NodeId]);
 
 	if (doorbells[NodeId].use_gpuvm) {
-		status = map_doorbell_dgpu(NodeId, gpu_id, doorbell_offset);
+		status = map_doorbell_dgpu(NodeId, gpu_id, doorbell_mmap_offset);
 		if (status != HSAKMT_STATUS_SUCCESS) {
 			/* Fall back to the old method if KFD doesn't
 			 * support doorbells in GPUVM
 			 */
 			doorbells[NodeId].use_gpuvm = false;
-			status = map_doorbell_apu(NodeId, gpu_id, doorbell_offset);
+			status = map_doorbell_apu(NodeId, gpu_id, doorbell_mmap_offset);
 		}
 	} else
-		status = map_doorbell_apu(NodeId, gpu_id, doorbell_offset);
+		status = map_doorbell_apu(NodeId, gpu_id, doorbell_mmap_offset);
 
 	if (status != HSAKMT_STATUS_SUCCESS)
 		doorbells[NodeId].size = 0;
@@ -388,6 +388,7 @@ void *allocate_exec_aligned_memory_gpu(uint32_t size, uint32_t align,
 	flags.ui32.ExecuteAccess = 1;
 	flags.ui32.NonPaged = nonPaged;
 	flags.ui32.PageSize = HSA_PAGE_SIZE_4KB;
+	flags.ui32.CoarseGrain = DeviceLocal;
 
 	size = ALIGN_UP(size, align);
 
@@ -575,16 +576,6 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtCreateQueue(HSAuint32 NodeId,
 		break;
 	case HSA_QUEUE_COMPUTE_AQL:
 		args.queue_type = KFD_IOC_QUEUE_TYPE_COMPUTE_AQL;
-		break;
-	case HSA_QUEUE_SDMA_ENGINE0:
-	case HSA_QUEUE_SDMA_ENGINE1:
-	case HSA_QUEUE_SDMA_ENGINE2:
-	case HSA_QUEUE_SDMA_ENGINE3:
-	case HSA_QUEUE_SDMA_ENGINE4:
-	case HSA_QUEUE_SDMA_ENGINE5:
-	case HSA_QUEUE_SDMA_ENGINE6:
-	case HSA_QUEUE_SDMA_ENGINE7:
-		args.queue_type = KFD_IOC_QUEUE_TYPE_SDMA_ENGINE(Type - HSA_QUEUE_SDMA_ENGINE0);
 		break;
 	default:
 		return HSAKMT_STATUS_INVALID_PARAMETER;

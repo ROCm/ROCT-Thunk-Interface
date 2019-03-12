@@ -38,10 +38,6 @@ struct kfd_ioctl_get_version_args {
 #define KFD_IOC_QUEUE_TYPE_COMPUTE		0x0
 #define KFD_IOC_QUEUE_TYPE_SDMA			0x1
 #define KFD_IOC_QUEUE_TYPE_COMPUTE_AQL		0x2
-#define KFD_IOC_QUEUE_TYPE_SDMA_ENGINE(e)	(0x10000 + (e))
-#define KFD_IOC_QUEUE_TYPE_SDMA_AQL_ENGINE(e)	(0x20000 + (e))
-#define KFD_IOC_QUEUE_TYPE_SDMA_ENGINE_MAX	(KFD_IOC_QUEUE_TYPE_SDMA_ENGINE(0xffff))
-#define KFD_IOC_QUEUE_TYPE_SDMA_AQL_ENGINE_MAX	(KFD_IOC_QUEUE_TYPE_SDMA_AQL_ENGINE(0xffff))
 
 #define KFD_MAX_QUEUE_PERCENTAGE	100
 #define KFD_MAX_QUEUE_PRIORITY		15
@@ -193,32 +189,62 @@ struct kfd_ioctl_dbg_wave_control_args {
 /* KFD_IOC_DBG_TRAP_ENABLE:
  * data1: 0=disable, 1=enable
  * data2: queue ID (for future use)
+ * data3: unused
+ * data4: unused
  */
 #define KFD_IOC_DBG_TRAP_ENABLE 0
 
 /* KFD_IOC_DBG_TRAP_SET_TRAP_DATA:
  * data1: SPI_GDBG_TRAP_DATA0
  * data2: SPI_GDBG_TRAP_DATA1
+ * data3: unused
+ * data4: unused
  */
 #define KFD_IOC_DBG_TRAP_SET_TRAP_DATA 1
 
 /* KFD_IOC_DBG_TRAP_SET_WAVE_LAUNCH_OVERRIDE:
  * data1: override mode: 0=OR, 1=REPLACE
  * data2: mask
+ * data3: unused
+ * data4: unused
  */
 #define KFD_IOC_DBG_TRAP_SET_WAVE_LAUNCH_OVERRIDE 2
 
 /* KFD_IOC_DBG_TRAP_SET_WAVE_LAUNCH_MODE:
  * data1: 0=normal, 1=halt, 2=kill, 3=singlestep, 4=disable
  * data2: unused
+ * data3: unused
+ * data4: unused
  */
 #define KFD_IOC_DBG_TRAP_SET_WAVE_LAUNCH_MODE 3
+
+
+#define KFD__DBG_NODE_SUSPEND_NO_GRACE          0x01
+#define KFD__DBG_NODE_SUSPEND_MEMORY_FENCE      0x02
+#define KFD__DBG_NODE_SUSPEND_UPDATE_CONTEXT    0x04
+/* KFD_IOC_DBG_TRAP_NODE_SUSPEND:
+ * data1: pid
+ * data2: nodeid
+ * data3: flags no_grace=0x01 memory_fence=0x02 update_context=0x04
+ * data4: unused
+ */
+#define KFD_IOC_DBG_TRAP_NODE_SUSPEND 4
+
+/* KFD_IOC_DBG_TRAP_NODE_RESUME:
+ * data1: pid
+ * data2: nodeid
+ * data3: flags no_grace=0x01 memory_fence=0x02 update_context=0x04
+ * data4: unused
+ */
+#define KFD_IOC_DBG_TRAP_NODE_RESUME 5
 
 struct kfd_ioctl_dbg_trap_args {
 	__u32 gpu_id;  /* to KFD */
 	__u32 op;      /* to KFD */
 	__u32 data1;   /* to KFD */
 	__u32 data2;   /* to KFD */
+	__u32 data3;   /* to KFD */
+	__u32 data4;   /* to KFD */
 };
 
 /* Matching HSA_EVENTTYPE */
@@ -285,7 +311,11 @@ struct kfd_hsa_memory_exception_data {
 	struct kfd_memory_exception_failure failure;
 	__u64 va;
 	__u32 gpu_id;
-	__u32 pad;
+	__u32 ErrorType; /* 0 = no RAS error,
+				1 = ECC_SRAM,
+				2 = Link_SYNFLOOD (poison),
+				3 = GPU hang (not attributable to a specific cause),
+				other values reserved */
 };
 
 /* hw exception data */

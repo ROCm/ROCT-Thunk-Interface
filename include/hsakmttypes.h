@@ -75,6 +75,12 @@ typedef HSAuint64          HSA_QUEUEID;
 // An HSA_QUEUEID that is never a valid queue ID.
 #define INVALID_QUEUEID 0xFFFFFFFFFFFFFFFFULL
 
+// A PID that is never a valid process ID.
+#define INVALID_PID 0xFFFFFFFF
+
+// // A HSA_NODEID that is never a valid node ID.
+#define INVALID_NODEID 0xFFFFFFFF
+
 // This is included in order to force the alignments to be 4 bytes so that
 // it avoids extra padding added by the compiler when a 64-bit binary is generated.
 #pragma pack(push, hsakmttypes_h, 4)
@@ -203,7 +209,10 @@ typedef union
         unsigned int WaveLaunchTrapOverrideSupported: 1; // Indicates if Wave Launch Trap Override is supported on the node.
         unsigned int WaveLaunchModeSupported: 1; // Indicates if Wave Launch Mode is supported on the node.
         unsigned int PreciseMemoryOperationsSupported: 1; // Indicates if Precise Memory Operations are supported on the node.
-        unsigned int Reserved            : 13;
+        unsigned int SRAM_EDCSupport: 1;         // Indicates if GFX internal SRAM EDC/ECC functionality is active
+        unsigned int Mem_EDCSupoort: 1;          // Indicates if GFX internal DRAM/HBM EDC/ECC functionality is active
+        unsigned int RASEventNotify: 1;          // Indicates if GFX extended RASFeatures and RAS EventNotify status is available
+        unsigned int Reserved            : 10;
     } ui32;
 } HSA_CAPABILITY;
 
@@ -622,26 +631,6 @@ typedef enum _HSA_QUEUE_TYPE
     HSA_QUEUE_COMPUTE_AQL          = 21, // HSA AQL packet compatible Compute Queue
     HSA_QUEUE_DMA_AQL              = 22, // HSA AQL packet compatible DMA Queue
 
-    HSA_QUEUE_SDMA_ENGINE0         =0x10000, //SDMA queue created on SDMA engine 0
-    HSA_QUEUE_SDMA_ENGINE1         =0x10001, //SDMA queue created on SDMA engine 1
-    HSA_QUEUE_SDMA_ENGINE2         =0x10002, //SDMA queue created on SDMA engine 2
-    HSA_QUEUE_SDMA_ENGINE3         =0x10003, //SDMA queue created on SDMA engine 3
-    HSA_QUEUE_SDMA_ENGINE4         =0x10004, //SDMA queue created on SDMA engine 4
-    HSA_QUEUE_SDMA_ENGINE5         =0x10005, //SDMA queue created on SDMA engine 5
-    HSA_QUEUE_SDMA_ENGINE6         =0x10006, //SDMA queue created on SDMA engine 6
-    HSA_QUEUE_SDMA_ENGINE7         =0x10007, //SDMA queue created on SDMA engine 7
-    HSA_QUEUE_SDMA_ENGINE_MAX      =0x1FFFF,
-
-
-    HSA_QUEUE_SDMA_AQL_ENGINE0     =0x20000, //SDMA AQL queue created on SDMA engine 0
-    HSA_QUEUE_SDMA_AQL_ENGINE1     =0x20001, //SDMA AQL queue created on SDMA engine 1
-    HSA_QUEUE_SDMA_AQL_ENGINE2     =0x20002, //SDMA AQL queue created on SDMA engine 2
-    HSA_QUEUE_SDMA_AQL_ENGINE3     =0x20003, //SDMA AQL queue created on SDMA engine 3
-    HSA_QUEUE_SDMA_AQL_ENGINE4     =0x20004, //SDMA AQL queue created on SDMA engine 4
-    HSA_QUEUE_SDMA_AQL_ENGINE5     =0x20005, //SDMA AQL queue created on SDMA engine 5
-    HSA_QUEUE_SDMA_AQL_ENGINE6     =0x20006, //SDMA AQL queue created on SDMA engine 6
-    HSA_QUEUE_SDMA_AQL_ENGINE7     =0x20007, //SDMA AQL queue created on SDMA engine 7
-    HSA_QUEUE_SDMA_AQL_ENGINE_MAX  =0x2FFFF,
     // more types in the future
 
     HSA_QUEUE_TYPE_SIZE            = 0xFFFFFFFF     //aligns to 32bit enum
@@ -782,6 +771,13 @@ typedef enum _HSA_DBG_WAVE_LAUNCH_MODE
     HSA_DBG_WAVE_LAUNCH_MODE_NUM
 } HSA_DBG_WAVE_LAUNCH_MODE;
 
+typedef enum HSA_DBG_NODE_CONTROL {
+      HSA_DBG_NODE_CONTROL_NO_GRACE_PERIOD = 0x01,
+      HSA_DBG_NODE_CONTROL_MEMORY_FENCE = 0x02,
+      HSA_DBG_NODE_CONTROL_UPDATE_CONTEXT = 0x04,
+} HSA_DBG_NODE_CONTROL;
+
+
 //This structure is hardware specific and may change in the future
 typedef struct _HsaDbgWaveMsgAMDGen2
 {
@@ -902,9 +898,11 @@ typedef struct _HsaAccessAttributeFailure
     unsigned int ReadOnly    : 1;  // Write access to a read-only page
     unsigned int NoExecute   : 1;  // Execute access to a page marked NX
     unsigned int GpuAccess   : 1;  // Host access only
-    unsigned int ECC         : 1;  // ECC failure (if supported by HW)
+    unsigned int ECC         : 1;  // RAS ECC failure (notification of DRAM ECC - non-recoverable - error, if supported by HW)
     unsigned int Imprecise   : 1;  // Can't determine the exact fault address
-    unsigned int Reserved    : 26; // must be 0
+    unsigned int ErrorType   : 3;  // Indicates RAS errors or other errors causing the access to GPU to fail
+                                      // 0 = no RAS error, 1 = ECC_SRAM, 2 = Link_SYNFLOOD (poison), 3 = GPU hang (not attributable to a specific cause), other values reserved
+    unsigned int Reserved    : 23; // must be 0
 } HsaAccessAttributeFailure;
 
 // data associated with HSA_EVENTID_MEMORY

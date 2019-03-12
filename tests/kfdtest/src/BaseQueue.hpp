@@ -43,10 +43,9 @@ class BaseQueue {
     /** Create the queue.
      *  @see hsaKmtCreateQueue
      *  @param pointers is used only for creating AQL queues. Otherwise it is omitted.
-     *  @param sdmaEngineId is used only for creating SDMA queues. -1 means let kfd kernel select a sdma engine
      */
     virtual HSAKMT_STATUS Create(unsigned int NodeId, unsigned int size = DEFAULT_QUEUE_SIZE,
-                                HSAuint64 *pointers = NULL, int sdmaEngineId = -1);
+                                 HSAuint64 *pointers = NULL);
     /** Update the queue.
      *  @see hsaKmtUpdateQueue
      *  @param percent New queue percentage
@@ -64,7 +63,7 @@ class BaseQueue {
     /** Wait for all the packets submitted to the queue to be consumed. (i.e. wait until RPTR=WPTR).
      *  Note that all packets being consumed is not the same as all packets being processed.
      */
-    virtual void Wait4PacketConsumption(HsaEvent *event = NULL);
+    virtual void Wait4PacketConsumption(HsaEvent *event = NULL, unsigned int timeOut = g_TestTimeOut);
     /** @brief Place packet and submit it in one function
      */
     virtual void PlaceAndSubmitPacket(const BasePacket &packet);

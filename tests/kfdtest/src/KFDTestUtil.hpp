@@ -38,7 +38,7 @@ class BaseQueue;
 uint64_t RoundToPowerOf2(uint64_t val);
 
 // @brief: waits until the value is written to the buffer or until time out if received through args
-bool WaitOnValue(const volatile unsigned int *buf, unsigned int value);
+bool WaitOnValue(const volatile unsigned int *buf, unsigned int value, unsigned int timeOut = g_TestTimeOut);
 
 void SplitU64(const HSAuint64 value, unsigned int& rLoPart, unsigned int& rHiPart);
 
@@ -48,8 +48,11 @@ HSAKMT_STATUS CreateQueueTypeEvent(bool ManualReset, bool IsSignaled, unsigned i
 
 bool is_dgpu();
 bool isTonga(const HsaNodeProperties *props);
-unsigned int FamilyIdFromNode(const HsaNodeProperties * props);
+unsigned int FamilyIdFromNode(const HsaNodeProperties *props);
 
+void GetSdmaInfo(const HsaNodeProperties *props,
+                 unsigned int *p_num_sdma_engines,
+                 unsigned int *p_num_sdma_queues_per_engine);
 
 class HsaMemoryBuffer {
  public:
