@@ -178,6 +178,10 @@ static struct hsa_gfxip_table {
 	{ 0x6995, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
 	{ 0x6997, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
 	{ 0x699F, 8, 0, 3, 1, "Polaris12", CHIP_POLARIS12 },
+	/* VegaM */
+	{ 0x694C, 8, 0, 3, 1, "VegaM", CHIP_VEGAM },
+	{ 0x694E, 8, 0, 3, 1, "VegaM", CHIP_VEGAM },
+	{ 0x694F, 8, 0, 3, 1, "VegaM", CHIP_VEGAM },
 	/* Vega10 */
 	{ 0x6860, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 },
 	{ 0x6861, 9, 0, 0, 1, "Vega10", CHIP_VEGA10 },
@@ -201,6 +205,7 @@ static struct hsa_gfxip_table {
 	{ 0x69Af, 9, 0, 4, 1, "Vega12", CHIP_VEGA12 },
 	/* Raven */
 	{ 0x15DD, 9, 0, 2, 0, "Raven", CHIP_RAVEN },
+	{ 0x15D8, 9, 0, 2, 0, "Raven", CHIP_RAVEN },
 	/* Vega20 */
 	{ 0x66A0, 9, 0, 6, 1, "Vega20", CHIP_VEGA20 },
 	{ 0x66A1, 9, 0, 6, 1, "Vega20", CHIP_VEGA20 },
@@ -990,6 +995,10 @@ HSAKMT_STATUS topology_sysfs_get_node_props(uint32_t node_id,
 			props->uCodeEngineVersions.Value = (uint32_t)prop_val & 0x3ff;
 		else if (strcmp(prop_name, "hive_id") == 0)
 			props->HiveID = prop_val;
+		else if (strcmp(prop_name, "num_sdma_engines") == 0)
+			props->NumSdmaEngines = prop_val;
+		else if (strcmp(prop_name, "num_sdma_xgmi_engines") == 0)
+			props->NumSdmaXgmiEngines = prop_val;
 	}
 
 	hsa_gfxip = find_hsa_gfxip_device(props->DeviceId);
@@ -1163,6 +1172,7 @@ static HSAKMT_STATUS topology_create_temp_cpu_cache_list(void **temp_cpu_ci_list
 	uint32_t cpuid_op_cache;
 	uint32_t eax, ebx, ecx = 0, edx; /* cpuid registers */
 	cpu_cacheinfo_t *cpu_ci_list, *this_cpu;
+	bool x2apic = false;
 
 	if (!temp_cpu_ci_list) {
 		ret = HSAKMT_STATUS_ERROR;
@@ -1217,10 +1227,29 @@ static HSAKMT_STATUS topology_create_temp_cpu_cache_list(void **temp_cpu_ci_list
 			goto exit;
 		}
 
-		eax = 0x1;
+		/* Detect the availability of the extended topology leaf */
+		eax = 0x0;
 		cpuid(&eax, &ebx, &ecx, &edx);
-		this_cpu->apicid = (ebx >> 24) & 0xff;
-		this_cpu->max_num_apicid = (ebx >> 16) & 0x0FF;
+		if (eax >= 11) {
+			eax = 0xb;
+			ecx = 0x0;
+			cpuid(&eax, &ebx, &ecx, &edx);
+			if (ebx)
+				x2apic = true;
+		}
+
+		if (x2apic) {
+			eax = 0xb;
+			cpuid(&eax, &ebx, &ecx, &edx);
+			this_cpu->apicid = edx;
+			cpuid_count(4, 0, &eax, &ebx, &ecx, &edx);
+			this_cpu->max_num_apicid = (eax >> 26) + 1;
+		} else {
+			eax = 0x1;
+			cpuid(&eax, &ebx, &ecx, &edx);
+			this_cpu->apicid = (ebx >> 24) & 0xff;
+			this_cpu->max_num_apicid = (ebx >> 16) & 0x0FF;
+		}
 		this_cpu->num_caches = cpuid_find_num_cache_leaves(cpuid_op_cache);
 		this_cpu->num_duplicated_caches = 0;
 		this_cpu->cache_info = calloc(
