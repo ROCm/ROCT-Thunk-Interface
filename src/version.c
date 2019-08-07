@@ -26,7 +26,7 @@
 #include "libhsakmt.h"
 #include <stdlib.h>
 #include <string.h>
-#include "linux/kfd_ioctl.h"
+#include <linux/kfd_ioctl.h>
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtGetVersion(HsaVersionInfo *VersionInfo)
 {
