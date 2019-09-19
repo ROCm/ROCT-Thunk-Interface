@@ -822,8 +822,7 @@ hsaKmtQueryDebugEvent(
     HSAuint32			*QueueId, // IN/OUT
     bool			ClearEvents, // IN
     HSA_DEBUG_EVENT_TYPE	*EventsReceived, // OUT
-    bool			*IsSuspended, // OUT
-    bool			*IsNew //OUT
+    bool			*IsSuspended // OUT
     );
 
 /**

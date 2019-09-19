@@ -434,14 +434,12 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryQueueStatus) {
         HSA_QUEUEID queueIds[1] = { qResources->QueueId};
         HSA_DEBUG_EVENT_TYPE EventReceived;
         bool IsSuspended = false;
-        bool IsNew = false;
 
         ASSERT_SUCCESS(hsaKmtQueryDebugEvent(defaultGPUNode, INVALID_PID, &qid,
                                              false, &EventReceived,
-                                             &IsSuspended, &IsNew));
+                                             &IsSuspended));
         ASSERT_NE(qid, invalidQid);
         ASSERT_EQ(IsSuspended, false);
-        ASSERT_EQ(IsNew, true);
         ASSERT_EQ(EventReceived, HSA_DEBUG_EVENT_TYPE_TRAP);
 
         // suspend queue, query suspended queue and clear pending event
@@ -453,17 +451,16 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryQueueStatus) {
 
         ASSERT_SUCCESS(hsaKmtQueryDebugEvent(defaultGPUNode, INVALID_PID,
                                              &qid, true, &EventReceived,
-                                             &IsSuspended, &IsNew));
+                                             &IsSuspended));
         ASSERT_EQ(IsSuspended, true);
 
         ASSERT_SUCCESS(hsaKmtQueueResume(INVALID_PID, 1, queueIds, 0));
 
         ASSERT_SUCCESS(hsaKmtQueryDebugEvent(defaultGPUNode, INVALID_PID, &qid,
                                              false, &EventReceived,
-                                             &IsSuspended, &IsNew));
+                                             &IsSuspended));
 
         ASSERT_EQ(IsSuspended, false);
-        ASSERT_EQ(IsNew, false);
         ASSERT_EQ(EventReceived, HSA_DEBUG_EVENT_TYPE_NONE);
 
         dispatch->Sync();
@@ -485,8 +482,7 @@ static void ExitVMFaultQueryChild(std::string errMsg,
                                   HSAint32 pollFd,
                                   PM4Queue *queue1,
                                   PM4Queue *queue2,
-                                  HsaEvent *event,
-                                  int gpuNode) {
+                                  HsaEvent *event) {
     if (queue1)
         queue1->Destroy();
 
@@ -503,14 +499,6 @@ static void ExitVMFaultQueryChild(std::string errMsg,
 
     if (pollFd >= 0)
         close(pollFd);
-
-    if (gpuNode >= 0) {
-        int ret = hsaKmtDisableDebugTrap(gpuNode);
-        if (ret) {
-            exitStatus = 1;
-            errMsg = "debug trap failed to disable";
-        }
-    }
 
     if (!errMsg.empty())
         WARN() << errMsg << std::endl;
@@ -537,7 +525,7 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
             ret = hsaKmtOpenKFD();
             if (ret != HSAKMT_STATUS_SUCCESS)
                 ExitVMFaultQueryChild("KFD open failed",
-                                      1, -1, NULL, NULL, NULL, -1);
+                                      1, -1, NULL, NULL, NULL);
 
             // enable debug trap and check poll fd creation
             ret = hsaKmtEnableDebugTrapWithPollFd(defaultGPUNode,
@@ -546,7 +534,7 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
 
             if (ret != HSAKMT_STATUS_SUCCESS || PollFd <= 0)
                 ExitVMFaultQueryChild("enable debug trap with poll fd failed",
-                                      1, -1, NULL, NULL, NULL, defaultGPUNode);
+                                      1, -1, NULL, NULL, NULL);
 
             // create shader, vmfault and trap bufs then enable 2nd level trap
             HsaMemoryBuffer vmFaultBuf(PAGE_SIZE, defaultGPUNode, true, false,
@@ -572,8 +560,7 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
 
             if (ret != HSAKMT_STATUS_SUCCESS)
                 ExitVMFaultQueryChild("setting trap handler failed",
-                                      1, PollFd, NULL, NULL, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, NULL, NULL, NULL);
 
             // compile and dispatch shader
             m_pIsaGen->CompileShader(jump_to_trap_gfx9, "jump_to_trap",
@@ -584,13 +571,11 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
             HSAuint32 qid1;
             if (queue1.Create(defaultGPUNode) != HSAKMT_STATUS_SUCCESS)
                 ExitVMFaultQueryChild("queue 1 creation failed",
-                                      1, PollFd, NULL, NULL, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, NULL, NULL, NULL);
 
             if (queue2.Create(defaultGPUNode) != HSAKMT_STATUS_SUCCESS)
                 ExitVMFaultQueryChild("queue 2 creation failed",
-                                      1, PollFd, &queue1, NULL, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, &queue1, NULL, NULL);
 
             unsigned int* iter = iterBuf.As<unsigned int*>();
             unsigned int* result = resBuf.As<unsigned int*>();
@@ -608,8 +593,7 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
             fds[0].events = POLLIN | POLLRDNORM;
             if (poll(fds, 1, 5000) <= 0)
                 ExitVMFaultQueryChild("poll wake on pending trap event failed",
-                                      1, PollFd, &queue1, &queue2, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, &queue1, &queue2, NULL);
 
             int kMaxSize = 4096;
             char fifoBuf[kMaxSize];
@@ -617,27 +601,23 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
                           || strchr(fifoBuf, 't') == NULL;
             if (childStatus)
                 ExitVMFaultQueryChild("read on pending trap event failed",
-                                      1, PollFd, &queue1, &queue2, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, &queue1, &queue2, NULL);
 
             memset(fifoBuf, 0, sizeof(fifoBuf));
 
             HSA_DEBUG_EVENT_TYPE EventReceived;
             bool IsSuspended;
-            bool IsNew;
             HSAuint32 invalidQid = 0xffffffff;
             qid1 = invalidQid;
 
             ret = hsaKmtQueryDebugEvent(defaultGPUNode, INVALID_PID, &qid1,
-                                        false, &EventReceived, &IsSuspended,
-                                        &IsNew);
+                                        false, &EventReceived, &IsSuspended);
 
             childStatus = ret != HSAKMT_STATUS_SUCCESS
                                  || EventReceived != HSA_DEBUG_EVENT_TYPE_TRAP;
             if (childStatus)
                 ExitVMFaultQueryChild("query on pending trap event failed",
-                                      1, PollFd, &queue1, &queue2, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, &queue1, &queue2, NULL);
 
             // create and wait on pending vmfault event
             HsaEvent *vmFaultEvent;
@@ -650,8 +630,7 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
                                             &vmFaultEvent);
             if (ret != HSAKMT_STATUS_SUCCESS)
                 ExitVMFaultQueryChild("create vmfault event failed",
-                                      1, PollFd, &queue1, &queue2, NULL,
-                                      defaultGPUNode);
+                                      1, PollFd, &queue1, &queue2, NULL);
 
             Dispatch dispatch2(vmFaultBuf, false);
             dispatch2.SetArgs(
@@ -664,13 +643,13 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
             if (ret != HSAKMT_STATUS_SUCCESS)
                 ExitVMFaultQueryChild("wait on vmfault event failed",
                                       1, PollFd, &queue1, &queue2,
-                                      vmFaultEvent, defaultGPUNode);
+                                      vmFaultEvent);
 
             // poll, read and query on pending vmfault event
             if (poll(fds, 1, 5000) <= 0)
                 ExitVMFaultQueryChild("poll wake on vmfault event failed",
                                       1, PollFd, &queue1, &queue2,
-                                      vmFaultEvent, defaultGPUNode);
+                                      vmFaultEvent);
 
             childStatus = read(PollFd, fifoBuf, kMaxSize) == -1
                           || strchr(fifoBuf, 'v') == NULL
@@ -679,11 +658,11 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
             if (childStatus)
                 ExitVMFaultQueryChild("read on vmfault event failed",
                                       1, PollFd, &queue1, &queue2,
-                                      vmFaultEvent, defaultGPUNode);
+                                      vmFaultEvent);
 
             ret = hsaKmtQueryDebugEvent(defaultGPUNode, INVALID_PID,
                                                 &qid1, true, &EventReceived,
-                                                &IsSuspended, &IsNew);
+                                                &IsSuspended);
 
             childStatus = ret != HSAKMT_STATUS_SUCCESS
                                  || EventReceived !=
@@ -691,10 +670,10 @@ TEST_F(KFDDBGTest, BasicDebuggerQueryVMFaultQueueStatus) {
             if (childStatus)
                 ExitVMFaultQueryChild("query on vmfault event failed",
                                       1, PollFd, &queue1, &queue2,
-                                      vmFaultEvent, defaultGPUNode);
+                                      vmFaultEvent);
 
             ExitVMFaultQueryChild("", 0, PollFd, &queue1, &queue2,
-                                  vmFaultEvent, defaultGPUNode);
+                                  vmFaultEvent);
 
         } else {
             int childStatus;
