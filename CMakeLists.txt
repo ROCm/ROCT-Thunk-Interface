@@ -77,7 +77,7 @@ endif ()
 set ( HSAKMT_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/libhsakmt.ver" )
 
 ## Linker Flags
-set (HSAKMT_LINK_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-soname=${HSAKMT_COMPONENT}.so.${LIB_VERSION_MAJOR} -Wl,-z,nodelete -Wl,-no-undefined" )
+set (HSAKMT_LINK_FLAGS "-Wl,--version-script=${HSAKMT_LINKER_SCRIPT} -Wl,-z,nodelete -Wl,-no-undefined" )
 
 ## Source files
 set ( HSAKMT_SRC "src/debug.c"
