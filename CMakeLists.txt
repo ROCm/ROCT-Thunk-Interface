@@ -30,7 +30,7 @@ set ( HSAKMT_PACKAGE "hsakmt-roct" )
 set ( HSAKMT_COMPONENT "lib${HSAKMT}" )
 set ( HSAKMT_TARGET "${HSAKMT}" )
 
-project ( ${HSAKMT_TARGET} VERSION 1.9.0)
+project ( ${HSAKMT_TARGET} VERSION 1.0.0)
 
 # Optionally, build HSAKMT with ccache.
 set(ROCM_CCACHE_BUILD OFF CACHE BOOL "Set to ON for a ccache enabled build")
@@ -52,23 +52,10 @@ endif ()
 include ( utils )
 include ( GNUInstallDirs )
 
-## Setup the package version.
-get_version ( "1.0.0" )
-
-set ( BUILD_VERSION_MAJOR ${VERSION_MAJOR} )
-set ( BUILD_VERSION_MINOR ${VERSION_MINOR} )
-set ( BUILD_VERSION_PATCH ${VERSION_PATCH} )
-
 set ( LIB_VERSION_MAJOR 1)
 set ( LIB_VERSION_MINOR 0)
 set ( LIB_VERSION_PATCH 6)
 set ( LIB_VERSION_STRING "${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}" )
-
-if ( DEFINED VERSION_BUILD AND NOT ${VERSION_BUILD} STREQUAL "" )
-    message ( "VERSION BUILD DEFINED ${VERSION_BUILD}" )
-    set ( BUILD_VERSION_PATCH "${BUILD_VERSION_PATCH}-${VERSION_BUILD}" )
-endif ()
-set ( BUILD_VERSION_STRING "${BUILD_VERSION_MAJOR}.${BUILD_VERSION_MINOR}.${BUILD_VERSION_PATCH}" )
 
 ## Verbose output.
 #set ( CMAKE_VERBOSE_MAKEFILE on )
@@ -143,7 +130,7 @@ add_custom_target ( build-dev
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
         -DCPACK_RPM_PACKAGE_REQUIRES="hsakmt-roct"
         -DCPACK_PACKAGING_INSTALL_PREFIX="${CPACK_PACKAGING_INSTALL_PREFIX}"
-        -DVERSION="${BUILD_VERSION_STRING}"
+        -DVERSION="${PROJECT_VERSION}"
         -DHSAKMT_BIN_NAME="${HSAKMT}"
     WORKING_DIRECTORY ${DEV_BUILD_DIR} )
 
