@@ -69,9 +69,21 @@ TEMPORARY_BLACKLIST_ALL_ASICS=\
 "KFDDBGTest.BasicDebuggerSuspendResume:"\
 "KFDHWSTest.*"
 
+BLACKLIST_NO_UPSTREAM=\
+"KFDDBGTest.*:"\
+"KFDIPCTest.*:"\
+"KFDQMTest.BasicCuMaskingEven:"\
+"KFDGWSTest.*:"\
+"KFDQMTest.P2PTest:"\
+"KFDMemoryTest.DeviceHdpFlush:"\
+"KFDPerformanceTest.P2PBandWidthTest:"\
+"KFDExceptionTest.*:"\
+"KFDMemoryTest.SignalHandling"
+
 BLACKLIST_ALL_ASICS=\
 "$PERMANENT_BLACKLIST_ALL_ASICS:"\
-"$TEMPORARY_BLACKLIST_ALL_ASICS"
+"$TEMPORARY_BLACKLIST_ALL_ASICS:"\
+"$BLACKLIST_NO_UPSTREAM"
 
 # SDMA-based tests (KFDIPCTest.BasicTest, KFDQM.*Sdma*, KFDMemoryTest.MMBench) are all
 # disabled on non-Hawaii due to SDMA instability - SWDEV-101666
