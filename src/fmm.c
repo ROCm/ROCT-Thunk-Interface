@@ -3548,6 +3548,9 @@ HSAKMT_STATUS fmm_get_mem_info(const void *address, HsaPointerInfo *info)
 	} else if (info->Type == HSA_POINTER_ALLOCATED) {
 		info->MemFlags.Value = vm_obj->flags;
 		info->CPUAddress = vm_obj->start;
+	} else if (info->Type == HSA_POINTER_REGISTERED_SHARED) {
+		info->MemFlags.Value = vm_obj->flags;
+		info->CPUAddress = vm_obj->start;
 	}
 
 	pthread_mutex_unlock(&aperture->fmm_mutex);
