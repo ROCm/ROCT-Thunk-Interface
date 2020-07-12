@@ -26,8 +26,13 @@
 #include <linux/types.h>
 #include <linux/ioctl.h>
 
+/*
+ * - 1.1 - initial version
+ * - 1.3 - Add SMI events support
+ * - 1.4 - Add IPC export/import
+ */
 #define KFD_IOCTL_MAJOR_VERSION 1
-#define KFD_IOCTL_MINOR_VERSION 2
+#define KFD_IOCTL_MINOR_VERSION 4
 
 /*
  * Debug revision change log
@@ -581,6 +586,24 @@ enum kfd_mmio_remap {
 	KFD_MMIO_REMAP_HDP_REG_FLUSH_CNTL = 4,
 };
 
+/* Export IPC handle
+ *
+ * @handle[in]:         buffer handle of the BO to export
+ * @gpu_id[in]:         GPU ID where @handle was allocated
+ * @share_handle[out]:  share handle that can be used with
+ *                      @kfd_ioctl_ipc_import_handle_args
+ *
+ * @share_handle is a 128 bit random number generated with
+ * @get_random_bytes. This number should be very hard to guess.
+ * Knowledge of the @share_handle implies authorization to access
+ * the shared memory. User mode should treat it like a secret key.
+ * It can be used to import this BO in a different process context
+ * for IPC buffer sharing. The handle will be valid as long as the
+ * underlying BO exists. If the same BO is exported multiple times,
+ * the same handle will be returned.
+ *
+ * Return 0 on success, negative errno on errors.
+ */
 struct kfd_ioctl_ipc_export_handle_args {
 	__u64 handle;		/* to KFD */
 	__u32 share_handle[4];	/* from KFD */
@@ -588,12 +611,29 @@ struct kfd_ioctl_ipc_export_handle_args {
 	__u32 pad;
 };
 
+/* Import IPC handle
+ *
+ * @share_handle[in]:  share handle from @kfd_ioctl_ipc_export_handle_args
+ * @va_addr[in]:       virtual address at which to import the BO
+ * @handle[out]:       buffer handle of the imported BO
+ * @gpu_id[out]:       device in which the shared BO was created
+ * @mmap_offset[out]:  mmap offset for CPU-mapping the BO
+ *
+ * @handle represents a new reference to the shared BO. This reference
+ * must be released with kfd_ioctl_free_memory_of_gpu_args.
+ *
+ * The BO can be mapped for GPU access with @kfd_ioctl_map_memory_to_gpu_args.
+ *
+ * It can be mapped for CPU access using the @mmap_offset.
+ *
+ * Return 0 on success, negative errno on errors.
+ */
 struct kfd_ioctl_ipc_import_handle_args {
 	__u64 handle;		/* from KFD */
 	__u64 va_addr;		/* to KFD */
-	__u64 mmap_offset;		/* from KFD */
+	__u64 mmap_offset;	/* from KFD */
 	__u32 share_handle[4];	/* to KFD */
-	__u32 gpu_id;		/* to KFD */
+	__u32 gpu_id;		/* from KFD */
 	__u32 pad;
 };
 
@@ -725,14 +765,24 @@ struct kfd_ioctl_cross_memory_copy_args {
 #define AMDKFD_IOC_ALLOC_QUEUE_GWS		\
 		AMDKFD_IOWR(0x1E, struct kfd_ioctl_alloc_queue_gws_args)
 
-#define AMDKFD_COMMAND_START		0x01
-#define AMDKFD_COMMAND_END		0x1F
 
-/* non-upstream ioctls */
-#define AMDKFD_IOC_IPC_IMPORT_HANDLE                                    \
-		AMDKFD_IOWR(0x80, struct kfd_ioctl_ipc_import_handle_args)
+#define AMDKFD_IOC_SMI_EVENTS                   \
+		AMDKFD_IOWR(0x1F, struct kfd_ioctl_smi_events_args)
+
+#define AMDKFD_IOC_IPC_IMPORT_HANDLE		\
+		AMDKFD_IOWR(0x20, struct kfd_ioctl_ipc_import_handle_args)
 
 #define AMDKFD_IOC_IPC_EXPORT_HANDLE		\
+		AMDKFD_IOWR(0x21, struct kfd_ioctl_ipc_export_handle_args)
+
+#define AMDKFD_COMMAND_START            0x01
+#define AMDKFD_COMMAND_END              0x22
+
+/* non-upstream ioctls */
+#define AMDKFD_IOC_IPC_IMPORT_HANDLE_DEPRECATED	\
+		AMDKFD_IOWR(0x80, struct kfd_ioctl_ipc_import_handle_args)
+
+#define AMDKFD_IOC_IPC_EXPORT_HANDLE_DEPRECATED	\
 		AMDKFD_IOWR(0x81, struct kfd_ioctl_ipc_export_handle_args)
 
 #define AMDKFD_IOC_DBG_TRAP			\

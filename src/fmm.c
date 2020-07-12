@@ -3186,6 +3186,10 @@ HSAKMT_STATUS fmm_share_memory(void *MemoryAddress,
 	HsaApertureInfo ApeInfo;
 	HsaSharedMemoryStruct *SharedMemoryStruct =
 		to_hsa_shared_memory_struct(SharedMemoryHandle);
+	const unsigned long ioctl_nr =
+		kfd_version_info.KernelInterfaceMinorVersion < 4 ?
+		AMDKFD_IOC_IPC_EXPORT_HANDLE_DEPRECATED :
+		AMDKFD_IOC_IPC_EXPORT_HANDLE;
 
 	if (SizeInBytes >= (1ULL << ((sizeof(HSAuint32) * 8) + PAGE_SHIFT)))
 		return HSAKMT_STATUS_INVALID_PARAMETER;
@@ -3216,7 +3220,7 @@ HSAKMT_STATUS fmm_share_memory(void *MemoryAddress,
 	exportArgs.gpu_id = gpu_id;
 
 
-	r = kmtIoctl(kfd_fd, AMDKFD_IOC_IPC_EXPORT_HANDLE, (void *)&exportArgs);
+	r = kmtIoctl(kfd_fd, ioctl_nr, (void *)&exportArgs);
 	if (r)
 		return HSAKMT_STATUS_ERROR;
 
@@ -3245,6 +3249,10 @@ HSAKMT_STATUS fmm_register_shared_memory(const HsaSharedMemoryHandle *SharedMemo
 	const HsaSharedMemoryStruct *SharedMemoryStruct =
 		to_const_hsa_shared_memory_struct(SharedMemoryHandle);
 	HSAuint64 SizeInPages = SharedMemoryStruct->SizeInPages;
+	const unsigned long ioctl_nr =
+		kfd_version_info.KernelInterfaceMinorVersion < 4 ?
+		AMDKFD_IOC_IPC_IMPORT_HANDLE_DEPRECATED :
+		AMDKFD_IOC_IPC_IMPORT_HANDLE;
 
 	if (gpu_id_array_size > 0 && !gpu_id_array)
 		return HSAKMT_STATUS_INVALID_PARAMETER;
@@ -3265,7 +3273,7 @@ HSAKMT_STATUS fmm_register_shared_memory(const HsaSharedMemoryHandle *SharedMemo
 	}
 
 	importArgs.va_addr = (uint64_t)reservedMem;
-	r = kmtIoctl(kfd_fd, AMDKFD_IOC_IPC_IMPORT_HANDLE, (void *)&importArgs);
+	r = kmtIoctl(kfd_fd, ioctl_nr, (void *)&importArgs);
 	if (r) {
 		err = HSAKMT_STATUS_ERROR;
 		goto err_import;
