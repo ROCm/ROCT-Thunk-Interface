@@ -175,6 +175,9 @@ TEST_F(KFDSVMEvictTest, BasicTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     HSAuint32 defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
     HSAuint64 vramBufSize = ALLOCATE_BUF_SIZE_MB * 1024 * 1024;
@@ -357,6 +360,9 @@ std::string KFDSVMEvictTest::CreateShader() {
 TEST_F(KFDSVMEvictTest, QueueTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL)
+
+    if (!SVMAPISupported())
+        return;
 
     HSAuint32 defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";

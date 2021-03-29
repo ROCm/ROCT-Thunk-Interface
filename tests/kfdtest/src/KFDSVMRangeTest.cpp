@@ -55,6 +55,9 @@ TEST_F(KFDSVMRangeTest, BasicSystemMemTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     PM4Queue queue;
     HSAuint64 AlternateVAGPU;
     unsigned int BufferSize = PAGE_SIZE;
@@ -94,6 +97,9 @@ TEST_F(KFDSVMRangeTest, BasicSystemMemTest) {
 TEST_F(KFDSVMRangeTest, SetGetAttributesTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL)
+
+    if (!SVMAPISupported())
+        return;
 
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
@@ -167,6 +173,9 @@ TEST_F(KFDSVMRangeTest, XNACKModeTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     HSAuint32 i, j;
     HSAint32 r;
     PM4Queue queue;
@@ -200,6 +209,9 @@ TEST_F(KFDSVMRangeTest, XNACKModeTest) {
 TEST_F(KFDSVMRangeTest, InvalidRangeTest) {
     TEST_START(TESTPROFILE_RUNALL)
 
+    if (!SVMAPISupported())
+        return;
+
     HSAuint32 Flags;;
     HSAKMT_STATUS ret;
 
@@ -216,6 +228,9 @@ TEST_F(KFDSVMRangeTest, InvalidRangeTest) {
 
 void KFDSVMRangeTest::SplitRangeTest(int defaultGPUNode, int prefetch_location) {
     unsigned int BufSize = 16 * PAGE_SIZE;
+
+    if (!SVMAPISupported())
+        return;
 
     HsaSVMRange *sysBuffer;
     HsaSVMRange *sysBuffer2;
@@ -294,6 +309,9 @@ TEST_F(KFDSVMRangeTest, SplitSystemRangeTest) {
     const HsaNodeProperties *pNodeProperties = m_NodeInfo.HsaDefaultGPUNodeProperties();
     TEST_START(TESTPROFILE_RUNALL)
 
+    if (!SVMAPISupported())
+        return;
+
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
 
@@ -310,6 +328,9 @@ TEST_F(KFDSVMRangeTest, SplitSystemRangeTest) {
 TEST_F(KFDSVMRangeTest, EvictSystemRangeTest) {
     const HsaNodeProperties *pNodeProperties = m_NodeInfo.HsaDefaultGPUNodeProperties();
     TEST_START(TESTPROFILE_RUNALL)
+
+    if (!SVMAPISupported())
+        return;
 
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
@@ -410,6 +431,9 @@ TEST_F(KFDSVMRangeTest, PartialUnmapSysMemTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
 
@@ -458,6 +482,9 @@ TEST_F(KFDSVMRangeTest, BasicVramTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     PM4Queue queue;
     HSAuint64 AlternateVAGPU;
     unsigned int BufferSize = PAGE_SIZE;
@@ -502,6 +529,9 @@ TEST_F(KFDSVMRangeTest, BasicVramTest) {
 TEST_F(KFDSVMRangeTest, SplitVramRangeTest) {
     TEST_START(TESTPROFILE_RUNALL)
 
+    if (!SVMAPISupported())
+        return;
+
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
 
@@ -516,6 +546,9 @@ TEST_F(KFDSVMRangeTest, SplitVramRangeTest) {
 
 TEST_F(KFDSVMRangeTest, PrefetchTest) {
     TEST_START(TESTPROFILE_RUNALL);
+
+    if (!SVMAPISupported())
+        return;
 
     unsigned int BufSize = 16 << 10;
     HsaSVMRange *sysBuffer;
@@ -552,6 +585,9 @@ TEST_F(KFDSVMRangeTest, PrefetchTest) {
 TEST_F(KFDSVMRangeTest, MigrateTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
+
+    if (!SVMAPISupported())
+        return;
 
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
@@ -645,6 +681,9 @@ TEST_F(KFDSVMRangeTest, MigrateGranularityTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
 
@@ -695,6 +734,9 @@ TEST_F(KFDSVMRangeTest, MigrateGranularityTest) {
 TEST_F(KFDSVMRangeTest, MigrateLargeBufTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
+
+    if (!SVMAPISupported())
+        return;
 
     PM4Queue queue;
     HSAuint64 AlternateVAGPU;
@@ -776,6 +818,9 @@ TEST_F(KFDSVMRangeTest, MigrateLargeBufTest) {
 TEST_F(KFDSVMRangeTest, MigratePolicyTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
+
+    if (!SVMAPISupported())
+        return;
 
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
@@ -878,6 +923,9 @@ TEST_F(KFDSVMRangeTest, MultiGPUMigrationTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
 
+    if (!SVMAPISupported())
+        return;
+
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
 
@@ -949,6 +997,9 @@ TEST_F(KFDSVMRangeTest, MultiGPUMigrationTest) {
 TEST_F(KFDSVMRangeTest, MultiGPUAccessInPlaceTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
+
+    if (!SVMAPISupported())
+        return;
 
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
@@ -1037,6 +1088,9 @@ unsigned int GpuReadThread(void* p) {
 TEST_F(KFDSVMRangeTest, MultiThreadMigrationTest) {
     TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
     TEST_START(TESTPROFILE_RUNALL);
+
+    if (!SVMAPISupported())
+        return;
 
     int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
     ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
