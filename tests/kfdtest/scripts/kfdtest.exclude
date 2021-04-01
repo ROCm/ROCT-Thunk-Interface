@@ -78,7 +78,8 @@ BLACKLIST_NO_UPSTREAM=\
 "KFDMemoryTest.DeviceHdpFlush:"\
 "KFDPerformanceTest.P2PBandWidthTest:"\
 "KFDExceptionTest.*:"\
-"KFDMemoryTest.SignalHandling"
+"KFDMemoryTest.SignalHandling:"\
+"KFDEvictTest.*"
 
 BLACKLIST_ALL_ASICS=\
 "$PERMANENT_BLACKLIST_ALL_ASICS:"\
