@@ -1498,7 +1498,7 @@ static int bind_mem_to_numa(uint32_t node_id, void *mem,
 
 	numa_bitmask_setbit(node_mask, node_id);
 	mode |= flags.ui32.NoSubstitute ? MPOL_BIND : MPOL_PREFERRED;
-	r = mbind(mem, SizeInBytes, mode, node_mask->maskp, num_node + 1, 0);
+	r = mbind(mem, SizeInBytes, mode, node_mask->maskp, num_node, 0);
 	numa_bitmask_free(node_mask);
 
 	if (r) {
