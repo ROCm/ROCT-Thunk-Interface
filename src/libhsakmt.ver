@@ -68,6 +68,7 @@ hsaKmtSVMSetAttr;
 hsaKmtSVMGetAttr;
 hsaKmtSetXNACKMode;
 hsaKmtGetXNACKMode;
+hsaKmtExportDMABufHandle;
 
 local: *;
 };
