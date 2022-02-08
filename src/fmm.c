@@ -2154,6 +2154,19 @@ static void release_mmio(void)
 	}
 }
 
+HSAKMT_STATUS fmm_get_drm_render_fd(uint32_t node_id, int *fd)
+{
+	unsigned int i;
+
+	for (i = 0; i < gpu_mem_count; i++) {
+		if (gpu_mem[i].node_id == node_id) {
+			*fd = gpu_mem[i].drm_render_fd;
+			return HSAKMT_STATUS_SUCCESS;
+		}
+	}
+	return HSAKMT_STATUS_INVALID_NODE_UNIT;
+}
+
 HSAKMT_STATUS fmm_init_process_apertures(unsigned int NumNodes)
 {
 	uint32_t i;

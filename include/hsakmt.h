@@ -592,6 +592,16 @@ hsaKmtUnmapGraphicHandle(
                 );
 
 /**
+ * Get a DRM render node FD for a GPU node
+ */
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtGetDRMRenderFD(
+                HSAuint32          NodeId,                      //IN
+                int                *fd                          //OUT
+                );
+
+/**
   Allocate GWS resource for a queue
  */
 

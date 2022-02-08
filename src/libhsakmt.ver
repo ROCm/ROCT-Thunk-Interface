@@ -37,6 +37,7 @@ hsaKmtDeregisterMemory;
 hsaKmtMapMemoryToGPU;
 hsaKmtMapMemoryToGPUNodes;
 hsaKmtUnmapMemoryToGPU;
+hsaKmtGetDRMRenderFd;
 hsaKmtDbgRegister;
 hsaKmtDbgUnregister;
 hsaKmtDbgWavefrontControl;
