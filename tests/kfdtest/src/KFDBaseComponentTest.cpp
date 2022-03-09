@@ -177,3 +177,11 @@ int KFDBaseComponentTest::FindDRMRenderNode(int gpuNode) {
 
     return index;
 }
+
+int KFDBaseComponentTest::GetDRMRenderFD(int gpuNode) {
+    int fd;
+    HSAKMT_STATUS s = hsaKmtGetDRMRenderFD(gpuNode, &fd);
+
+    EXPECT_SUCCESS(s);
+    return s == HSAKMT_STATUS_SUCCESS ? fd : -EINVAL;
+}

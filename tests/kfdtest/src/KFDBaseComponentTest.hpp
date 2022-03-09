@@ -52,9 +52,12 @@ class KFDBaseComponentTest : public testing::Test {
         uint32_t bdf;
     } m_RenderNodes[MAX_RENDER_NODES];
 
-// @brief Finds DRM Render node corresponding to gpuNode
-// @return DRM Render Node if successful or -1 on failure
+    // @brief Finds DRM Render node corresponding to gpuNode
+    // @return DRM Render Node if successful or -1 on failure
     int FindDRMRenderNode(int gpuNode);
+    // @brief Returns DRM Render node with the same VM context as KFD
+    // @return DRM Render Node if successful or -1 on failure
+    int GetDRMRenderFD(int gpuNode);
     unsigned int GetFamilyIdFromNodeId(unsigned int nodeId);
     unsigned int GetFamilyIdFromDefaultNode(){ return m_FamilyId; }
 

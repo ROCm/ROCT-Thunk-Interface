@@ -2813,3 +2813,79 @@ TEST_F(KFDMemoryTest, ExportDMABufTest) {
 
     TEST_END
 }
+
+TEST_F(KFDMemoryTest, DrmMap) {
+    TEST_REQUIRE_ENV_CAPABILITIES(ENVCAPS_64BITLINUX);
+    TEST_START(TESTPROFILE_RUNALL);
+
+    if (m_VersionInfo.KernelInterfaceMinorVersion < 9) {
+        LOG() << "Skipping test, requires KFD ioctl version 1.9 or newer" << std::endl;
+        return;
+    }
+
+    if (m_FamilyId < FAMILY_AI) {
+        LOG() << "Skipping test: Test requires gfx9 and later asics." << std::endl;
+        return;
+    }
+
+    int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
+    ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
+
+    int renderFd = GetDRMRenderFD(defaultGPUNode);
+    ASSERT_GE(renderFd, 0) << "failed to get default GPU render node FD";
+    uint32_t major, minor;
+    amdgpu_device_handle amdgpu_dev;
+    ASSERT_EQ(0, amdgpu_device_initialize(renderFd, &major, &minor, &amdgpu_dev)) << "failed to initialize amdgpu device";
+
+    HsaMemoryBuffer buffer(PAGE_SIZE, defaultGPUNode, false/*zero*/, true/*local*/, false/*exec*/);
+    HSAuint32 *buf = buffer.As<HSAuint32*>();
+
+    // Export DMABuf handle
+    int dmabuf_fd;
+    HSAuint64 offset;
+    ASSERT_SUCCESS(hsaKmtExportDMABufHandle(buf, PAGE_SIZE, &dmabuf_fd, &offset));
+    ASSERT_EQ(0, offset);
+
+    // Import into libdrm
+    struct amdgpu_bo_import_result import;
+    amdgpu_bo_import(amdgpu_dev, amdgpu_bo_handle_type_dma_buf_fd, dmabuf_fd, &import);
+    amdgpu_bo_handle bo = import.buf_handle;
+    ASSERT_EQ(PAGE_SIZE, import.alloc_size);
+
+    // map the BO using GEM API at a new virtual address reserved with mmap
+    void *addr = mmap(NULL, PAGE_SIZE, PROT_NONE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+    ASSERT_NE((void *)NULL, addr);
+
+    amdgpu_bo_va_op(bo, 0, PAGE_SIZE, (uint64_t)(unsigned long)addr, 0, AMDGPU_VA_OP_MAP);
+
+    // test accessing the BO from the GPU
+    PM4Queue pm4Queue;
+    ASSERT_SUCCESS(pm4Queue.Create(defaultGPUNode));
+    HsaMemoryBuffer sysBuffer(PAGE_SIZE, defaultGPUNode);
+    HSAuint32 *sys = sysBuffer.As<HSAuint32*>();
+    HsaMemoryBuffer isaBuffer(PAGE_SIZE, defaultGPUNode, true/*zero*/, false/*local*/, true/*exec*/);
+    m_pIsaGen->GetCopyDwordIsa(isaBuffer);
+
+    // copy from system memory to drm-mapped VRAM and back
+    sys[0] = 0xdeadbeef;
+    sys[1] = 0;
+    Dispatch dispatch1(isaBuffer);
+    dispatch1.SetArgs(sys, addr);
+    dispatch1.Submit(pm4Queue);
+    dispatch1.Sync(g_TestTimeOut);
+    Dispatch dispatch2(isaBuffer);
+    dispatch2.SetArgs(addr, &sys[1]);
+    dispatch2.Submit(pm4Queue);
+    dispatch2.Sync(g_TestTimeOut);
+    ASSERT_EQ(0xdeadbeef, sys[1]);
+    ASSERT_SUCCESS(pm4Queue.Destroy());
+
+    // unmap the BO using GEM API
+    amdgpu_bo_va_op(bo, 0, PAGE_SIZE, (uint64_t)(unsigned long)addr, 0, AMDGPU_VA_OP_UNMAP);
+
+    // clean up
+    amdgpu_bo_free(bo);
+    amdgpu_device_deinitialize(amdgpu_dev);
+
+    TEST_END
+}
