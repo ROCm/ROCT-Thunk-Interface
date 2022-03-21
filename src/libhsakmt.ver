@@ -62,6 +62,7 @@ hsaKmtAllocQueueGWS;
 hsaKmtCheckRuntimeDebugSupport;
 hsaKmtRuntimeEnable;
 hsaKmtRuntimeDisable;
+hsaKmtDebugTrapIoctl;
 hsaKmtSPMAcquire;
 hsaKmtSPMRelease;
 hsaKmtSPMSetDestBuffer;

@@ -655,6 +655,11 @@ HSAKMT_STATUS
 HSAKMTAPI
 hsaKmtRuntimeDisable(void);
 
+HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(
+    struct kfd_ioctl_dbg_trap_args *arg,
+    HSA_QUEUEID *Queues,
+    HSAuint64 *ReturnOut);
+
 /**
   Gets GPU and CPU clock counters for particular Node
 */
@@ -897,4 +902,3 @@ hsaKmtCheckRuntimeDebugSupport(
 #endif
 
 #endif //_HSAKMT_H_
-

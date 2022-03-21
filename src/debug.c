@@ -329,3 +329,42 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeDisable(void)
 		return HSAKMT_STATUS_ERROR;
 	return HSAKMT_STATUS_SUCCESS;
 }
+
+HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(struct kfd_ioctl_dbg_trap_args *args,
+					HSA_QUEUEID *Queues,
+					HSAuint64 *ReturnOut)
+{
+	HSAKMT_STATUS result;
+
+	CHECK_KFD_OPEN();
+
+	if (Queues) {
+		int num_queues = args->op == KFD_IOC_DBG_TRAP_SUSPEND_QUEUES ?
+						args->suspend_queues.num_queues :
+						args->resume_queues.num_queues;
+		void *queue_ptr = args->op == KFD_IOC_DBG_TRAP_SUSPEND_QUEUES ?
+						(void *)args->suspend_queues.queue_array_ptr :
+						(void *)args->resume_queues.queue_array_ptr;
+
+		memcpy(queue_ptr, convert_queue_ids(num_queues, Queues),
+						num_queues * sizeof(uint32_t));
+	}
+
+	long err = kmtIoctl(kfd_fd, AMDKFD_IOC_DBG_TRAP, args);
+
+	if (args->op == KFD_IOC_DBG_TRAP_SUSPEND_QUEUES &&
+				err >= 0 && err <= args->suspend_queues.num_queues)
+		result = HSAKMT_STATUS_SUCCESS;
+	else if (args->op == KFD_IOC_DBG_TRAP_RESUME_QUEUES &&
+				err >= 0 && err <= args->resume_queues.num_queues)
+		result = HSAKMT_STATUS_SUCCESS;
+	else if (err == 0)
+		result = HSAKMT_STATUS_SUCCESS;
+	else
+		result = HSAKMT_STATUS_ERROR;
+
+	if (ReturnOut)
+		*ReturnOut = (HSAuint64)err;
+
+	return result;
+}
