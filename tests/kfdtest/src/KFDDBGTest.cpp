@@ -21,6 +21,7 @@
  *
  */
 
+#include "BaseDebug.hpp"
 #include "KFDDBGTest.hpp"
 #include <sys/ptrace.h>
 #include <poll.h>
