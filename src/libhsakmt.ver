@@ -59,7 +59,7 @@ hsaKmtQueryPointerInfo;
 hsaKmtSetMemoryUserData;
 hsaKmtGetQueueInfo;
 hsaKmtAllocQueueGWS;
-hsaKmtGetKernelDebugTrapVersionInfo;
+hsaKmtCheckRuntimeDebugSupport;
 hsaKmtRuntimeEnable;
 hsaKmtRuntimeDisable;
 hsaKmtSPMAcquire;

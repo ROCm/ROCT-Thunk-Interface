@@ -265,110 +265,67 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtDbgAddressWatch(HSAuint32 NodeId,
 	return HSAKMT_STATUS_SUCCESS;
 }
 
-/* Get the major and minor version of the kernel debugger support. */
-HSAKMT_STATUS
-HSAKMTAPI
-hsaKmtGetKernelDebugTrapVersionInfo(
-    HSAuint32 *Major,  //Out
-    HSAuint32 *Minor   //Out
-)
-{
-	struct kfd_ioctl_dbg_trap_args args = {0};
-
-	memset(&args, 0x00, sizeof(args));
-	args.op = KFD_IOC_DBG_TRAP_GET_VERSION;
-	args.pid = getpid();
-
-	long err = kmtIoctl(kfd_fd, AMDKFD_IOC_DBG_TRAP, &args);
-
-	if (err)
-		return HSAKMT_STATUS_ERROR;
-
-	*Major = args.data1;
-	*Minor = args.data2;
-	return HSAKMT_STATUS_SUCCESS;
-}
-
-#define HSA_RUNTIME_ENABLE_MIN_MAJOR	10
-#define HSA_RUNTIME_ENABLE_MAX_MAJOR	13
-#define HSA_RUNTIME_ENABLE_MIN_MINOR	0
-
-static HSAKMT_STATUS checkRuntimeDebugSupport(void) {
+#define HSA_RUNTIME_ENABLE_MIN_MAJOR	1
+#define HSA_RUNTIME_ENABLE_MIN_MINOR	12
+HSAKMT_STATUS HSAKMTAPI hsaKmtCheckRuntimeDebugSupport(void) {
+	HsaVersionInfo version;
 	HSAuint32 kMajor, kMinor;
 	HsaNodeProperties node = {0};
 	HsaSystemProperties props = {0};
-
 	memset(&node, 0x00, sizeof(node));
 	memset(&props, 0x00, sizeof(props));
 	if (hsaKmtAcquireSystemProperties(&props))
 		return HSAKMT_STATUS_ERROR;
-
 	//the firmware of gpu node doesn't support the debugger, disable it.
 	for (uint32_t i = 0; i < props.NumNodes; i++) {
 		if (hsaKmtGetNodeProperties(i, &node))
 			return HSAKMT_STATUS_ERROR;
-
 		//ignore cpu node
 		if (node.NumCPUCores)
 			continue;
 		if (!node.Capability.ui32.DebugSupportedFirmware)
 			return HSAKMT_STATUS_NOT_SUPPORTED;
 	}
-
-	if (hsaKmtGetKernelDebugTrapVersionInfo(&kMajor, &kMinor))
+	if (hsaKmtGetVersion(&version))
 		return HSAKMT_STATUS_NOT_SUPPORTED;
-
-	if (kMajor < HSA_RUNTIME_ENABLE_MIN_MAJOR || kMajor > HSA_RUNTIME_ENABLE_MAX_MAJOR ||
+	kMajor = version.KernelInterfaceMajorVersion;
+	kMinor = version.KernelInterfaceMinorVersion;
+	if (kMajor < HSA_RUNTIME_ENABLE_MIN_MAJOR ||
 			(kMajor == HSA_RUNTIME_ENABLE_MIN_MAJOR &&
 				(int)kMinor < HSA_RUNTIME_ENABLE_MIN_MINOR))
 		return HSAKMT_STATUS_NOT_SUPPORTED;
-
 	return HSAKMT_STATUS_SUCCESS;
 }
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeEnable(void *rDebug,
 					    bool setupTtmp)
 {
-	struct kfd_ioctl_dbg_trap_args args = {0};
-	HSAKMT_STATUS result = checkRuntimeDebugSupport();
-
+	struct kfd_ioctl_runtime_enable_args args = {0};
+	HSAKMT_STATUS result = hsaKmtCheckRuntimeDebugSupport();
 	if (result)
 		return result;
-
 	memset(&args, 0x00, sizeof(args));
-	args.op = KFD_IOC_DBG_TRAP_RUNTIME_ENABLE;
-	args.pid = getpid();
-	args.data1 = 1;  //enable
-	args.data2 = setupTtmp;
-	args.ptr = (HSAuint64)rDebug;
-
-	long err = kmtIoctl(kfd_fd, AMDKFD_IOC_DBG_TRAP, &args);
-
+	args.r_debug = (HSAuint64)rDebug;
+	args.mode_mask = KFD_RUNTIME_ENABLE_MODE_ENABLE_MASK;
+	args.mode_mask |= setupTtmp ? KFD_RUNTIME_ENABLE_MODE_TTMP_SAVE_MASK : 0;
+	long err = kmtIoctl(kfd_fd, AMDKFD_IOC_RUNTIME_ENABLE, &args);
 	if (err) {
 		if (errno == EBUSY)
 			return HSAKMT_STATUS_UNAVAILABLE;
 		else
 			return HSAKMT_STATUS_ERROR;
 	}
-
 	return HSAKMT_STATUS_SUCCESS;
 }
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeDisable(void)
 {
-	struct kfd_ioctl_dbg_trap_args args = {0};
-	HSAKMT_STATUS result = checkRuntimeDebugSupport();
-
+	struct kfd_ioctl_runtime_enable_args args = {0};
+	HSAKMT_STATUS result = hsaKmtCheckRuntimeDebugSupport();
 	if (result)
 		return result;
-
 	memset(&args, 0x00, sizeof(args));
-	args.op = KFD_IOC_DBG_TRAP_RUNTIME_ENABLE;
-	args.pid = getpid();
-	args.data1 = 0;  //disable
-
-	if (kmtIoctl(kfd_fd, AMDKFD_IOC_DBG_TRAP, &args))
+	if (kmtIoctl(kfd_fd, AMDKFD_IOC_RUNTIME_ENABLE, &args))
 		return HSAKMT_STATUS_ERROR;
-
 	return HSAKMT_STATUS_SUCCESS;
 }

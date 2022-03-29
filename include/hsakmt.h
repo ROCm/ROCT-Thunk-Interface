@@ -656,16 +656,6 @@ HSAKMTAPI
 hsaKmtRuntimeDisable(void);
 
 /**
-  Get the major and minor version of the kernel debugger support.
-*/
-HSAKMT_STATUS
-HSAKMTAPI
-hsaKmtGetKernelDebugTrapVersionInfo(
-    HSAuint32 *Major,  //Out
-    HSAuint32 *Minor   //Out
-    );
-
-/**
   Gets GPU and CPU clock counters for particular Node
 */
 
@@ -891,6 +881,15 @@ HSAKMTAPI
 hsaKmtOpenSMI(
     HSAuint32 NodeId,   // IN: GPU node_id to receive the SMI event from
     int *fd             // OUT: anonymous file handle
+);
+
+/**
+   Check whether gpu firmware and kernel support debugging
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtCheckRuntimeDebugSupport(
+  void
 );
 
 #ifdef __cplusplus
