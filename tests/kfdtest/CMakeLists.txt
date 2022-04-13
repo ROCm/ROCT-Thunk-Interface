@@ -203,6 +203,7 @@ set (SRC_FILES gtest-1.6.0/gtest-all.cpp
   src/KFDExceptionTest.cpp
   src/KFDGraphicsInterop.cpp
   src/KFDPerfCounters.cpp
+  src/KFDDBGTest.cpp
   src/KFDGWSTest.cpp
   src/KFDIPCTest.cpp
   src/KFDASMTest.cpp
