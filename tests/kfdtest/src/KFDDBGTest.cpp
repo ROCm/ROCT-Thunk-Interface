@@ -32,83 +32,6 @@
 #include "Dispatch.hpp"
 #include <string>
 
-static const char* jump_to_trap_gfx = \
-"\
-shader jump_to_trap\n\
-wave_size(32) \n\
-type(CS)\n\
-/*copy the parameters from scalar registers to vector registers*/\n\
-    s_trap 1\n\
-    v_mov_b32 v0, s0\n\
-    v_mov_b32 v1, s1\n\
-    v_mov_b32 v2, s2\n\
-    v_mov_b32 v3, s3\n\
-    flat_load_dword v4, v[0:1] slc    /*load target iteration value*/\n\
-    s_waitcnt vmcnt(0)&lgkmcnt(0)\n\
-    v_mov_b32 v5, 0\n\
-LOOP:\n\
-    v_add_co_u32 v5, vcc, 1, v5\n\
-    s_waitcnt vmcnt(0)&lgkmcnt(0)\n\
-    /*compare the result value (v5) to iteration value (v4),*/\n\
-    /*and jump if equal (i.e. if VCC is not zero after the comparison)*/\n\
-    v_cmp_lt_u32 vcc, v5, v4\n\
-    s_cbranch_vccnz LOOP\n\
-    flat_store_dword v[2,3], v5\n\
-    s_waitcnt vmcnt(0)&lgkmcnt(0)\n\
-    s_endpgm\n\
-    end\n\
-";
-
-static const char* trap_handler_gfx = \
-"\
-shader trap_handler\n\
-wave_size(32) \n\
-type(CS)\n\
-CHECK_VMFAULT:\n\
-    /*if trap jumped to by vmfault, restore skip m0 signalling*/\n\
-    s_getreg_b32 ttmp14, hwreg(HW_REG_TRAPSTS)\n\
-    s_and_b32 ttmp2, ttmp14, 0x800\n\
-    s_cbranch_scc1 RESTORE_AND_EXIT\n\
-GET_DOORBELL:\n\
-    s_mov_b32 ttmp2, exec_lo\n\
-    s_mov_b32 ttmp3, exec_hi\n\
-    s_mov_b32 exec_lo, 0x80000000\n\
-    s_sendmsg 10\n\
-WAIT_SENDMSG:\n\
-    /*wait until msb is cleared (i.e. doorbell fetched)*/\n\
-    s_nop 7\n\
-    s_bitcmp0_b32 exec_lo, 0x1F\n\
-    s_cbranch_scc0 WAIT_SENDMSG\n\
-SEND_INTERRUPT:\n\
-    /* set context bit and doorbell and restore exec*/\n\
-    s_mov_b32 exec_hi, ttmp3\n\
-    s_and_b32 exec_lo, exec_lo, 0xfff\n\
-    s_mov_b32 ttmp3, exec_lo\n\
-    s_bitset1_b32 ttmp3, 23\n\
-    s_mov_b32 exec_lo, ttmp2\n\
-    s_mov_b32 ttmp2, m0\n\
-    /* set m0, send interrupt and restore m0 and exit trap*/\n\
-    s_mov_b32 m0, ttmp3\n\
-    s_nop 0x0\n\
-    s_sendmsg sendmsg(MSG_INTERRUPT)\n\
-    s_mov_b32 m0, ttmp2\n\
-RESTORE_AND_EXIT:\n\
-    /* restore and increment program counter to skip shader trap jump*/\n\
-    s_add_u32 ttmp0, ttmp0, 4\n\
-    s_addc_u32 ttmp1, ttmp1, 0\n\
-    s_and_b32 ttmp1, ttmp1, 0xffff\n\
-    /* restore SQ_WAVE_IB_STS */\n\
-    s_lshr_b32 ttmp2, ttmp11, (26 - 15)\n\
-    s_and_b32 ttmp2, ttmp2, (0x8000 | 0x1F0000)\n\
-    s_setreg_b32 hwreg(HW_REG_IB_STS), ttmp2\n\
-    /* restore SQ_WAVE_STATUS */\n\
-    s_and_b64 exec, exec, exec\n\
-    s_and_b64 vcc, vcc, vcc\n\
-    s_setreg_b32 hwreg(HW_REG_STATUS), ttmp12\n\
-    s_rfe_b64 [ttmp0, ttmp1]\n\
-    end\n\
-";
-
 void KFDDBGTest::SetUp() {
     ROUTINE_START
 
@@ -306,6 +229,81 @@ TEST_F(KFDDBGTest, AttachToRunningProcess) {
             EXPECT_EQ(WIFEXITED(childStatus), true);
             EXPECT_EQ(WEXITSTATUS(childStatus), HSAKMT_STATUS_SUCCESS);
         }
+    } else {
+        LOG() << "Skipping test: Test not supported on family ID 0x"
+              << m_FamilyId << "." << std::endl;
+    }
+exit:
+    LOG() << std::endl;
+    TEST_END
+}
+
+TEST_F(KFDDBGTest, HitTrapEvent) {
+    TEST_START(TESTPROFILE_RUNALL)
+    if (m_FamilyId >= FAMILY_AI) {
+        int defaultGPUNode = m_NodeInfo.HsaDefaultGPUNode();
+        
+        if (hsaKmtCheckRuntimeDebugSupport()) {
+            LOG() << "Skip test as debug API not supported";
+            goto exit;
+        }
+
+        ASSERT_GE(defaultGPUNode, 0) << "failed to get default GPU Node";
+
+        // create shader and trap bufs then enable 2nd level trap
+        HsaMemoryBuffer isaBuf(PAGE_SIZE, defaultGPUNode, true, false, true);
+        HsaMemoryBuffer trapStatusBuf(PAGE_SIZE, defaultGPUNode, true, false, false);
+
+        HsaMemoryBuffer trap(PAGE_SIZE*2, defaultGPUNode, true, false, true);
+        HsaMemoryBuffer tmaBuf(PAGE_SIZE, defaultGPUNode, false, false, false);
+
+        ASSERT_SUCCESS(hsaKmtSetTrapHandler(defaultGPUNode,
+                                            trap.As<void *>(),
+                                            0x1000,
+                                            tmaBuf.As<void*>(),
+                                            0x1000));
+
+        // compile and dispatch shader
+        ASSERT_SUCCESS(m_pAsm->RunAssembleBuf(jump_to_trap_gfx, isaBuf.As<char*>()));
+        ASSERT_SUCCESS(m_pAsm->RunAssembleBuf(trap_handler_gfx, trap.As<char*>()));
+
+        uint32_t rDebug;
+        ASSERT_SUCCESS(hsaKmtRuntimeEnable(&rDebug, true));
+
+        BaseDebug *debug = new BaseDebug();
+        struct kfd_runtime_info r_info = {0};
+        ASSERT_SUCCESS(debug->Attach(&r_info, sizeof(r_info), getpid(), 0));
+        ASSERT_EQ(r_info.runtime_state, DEBUG_RUNTIME_STATE_ENABLED);
+
+        PM4Queue queue;
+        HsaQueueResource *qResources;
+        ASSERT_SUCCESS(queue.Create(defaultGPUNode));
+
+        unsigned int* trapStatus = trapStatusBuf.As<unsigned int*>();
+        trapStatus[0] = 0;
+        Dispatch *dispatch;
+        dispatch = new Dispatch(isaBuf);
+        dispatch->SetArgs(&trapStatus[0], NULL);
+        dispatch->SetDim(1, 1, 1);
+
+	/* Subscribe to trap events and submit the queue */
+        uint64_t trapMask = KFD_EC_MASK(EC_QUEUE_WAVE_TRAP);
+	debug->SetExceptionsEnabled(trapMask);
+        dispatch->Submit(queue);
+
+	/* Wait for trap event */
+        uint32_t QueueId = -1;
+        ASSERT_SUCCESS(debug->QueryDebugEvent(&trapMask, NULL, &QueueId, 5000));
+        ASSERT_NE(QueueId, -1);
+        ASSERT_EQ(trapMask, KFD_EC_MASK(EC_QUEUE_WAVE_TRAP) | KFD_EC_MASK(EC_QUEUE_NEW));
+
+        dispatch->Sync();
+        EXPECT_SUCCESS(queue.Destroy());
+
+	ASSERT_NE(trapStatus[0], 0);
+
+        debug->Detach();
+        hsaKmtRuntimeDisable();
     } else {
         LOG() << "Skipping test: Test not supported on family ID 0x"
               << m_FamilyId << "." << std::endl;
