@@ -111,3 +111,16 @@ HSAKMT_STATUS BaseDebug::SendRuntimeEvent(uint64_t exceptions, int gpuId, int qu
 
     return hsaKmtDebugTrapIoctl(&args, NULL, NULL);
 }
+
+void BaseDebug::SetExceptionsEnabled(uint64_t exceptions)
+{
+    struct kfd_ioctl_dbg_trap_args args = {0};
+
+    memset(&args, 0x00, sizeof(args));
+
+    args.pid = m_Pid;
+    args.op = KFD_IOC_DBG_TRAP_SET_EXCEPTIONS_ENABLED;     
+    args.set_exceptions_enabled.exception_mask = exceptions;
+
+    hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+}
