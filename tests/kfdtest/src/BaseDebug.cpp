@@ -124,3 +124,21 @@ void BaseDebug::SetExceptionsEnabled(uint64_t exceptions)
 
     hsaKmtDebugTrapIoctl(&args, NULL, NULL);
 }
+
+HSAKMT_STATUS BaseDebug::SuspendQueues(unsigned int *NumQueues,
+                                       HSA_QUEUEID *Queues,
+                                       uint32_t *QueueIds,
+                                       uint64_t ExceptionsToClear)
+{
+    struct kfd_ioctl_dbg_trap_args args = {0};
+
+    memset(&args, 0x00, sizeof(args));
+
+    args.pid = m_Pid;
+    args.op = KFD_IOC_DBG_TRAP_SUSPEND_QUEUES;
+    args.suspend_queues.num_queues = *NumQueues;
+    args.suspend_queues.queue_array_ptr = (uint64_t)QueueIds;
+    args.suspend_queues.exception_mask = ExceptionsToClear;
+
+    return hsaKmtDebugTrapIoctl(&args, Queues, (HSAuint64 *)NumQueues);
+}
