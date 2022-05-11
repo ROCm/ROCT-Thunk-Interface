@@ -46,6 +46,7 @@ class BaseDebug {
     void SetExceptionsEnabled(uint64_t exceptions);
     HSAKMT_STATUS SuspendQueues(unsigned int *NumQueues, HSA_QUEUEID *Queues, uint32_t *QueueIds,
                                 uint64_t ExceptionsToClear);
+    HSAKMT_STATUS ResumeQueues(unsigned int *NumQueues, HSA_QUEUEID *Queues, uint32_t *QueueIds);
 
  private:
     unsigned int m_Pid;

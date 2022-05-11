@@ -142,3 +142,19 @@ HSAKMT_STATUS BaseDebug::SuspendQueues(unsigned int *NumQueues,
 
     return hsaKmtDebugTrapIoctl(&args, Queues, (HSAuint64 *)NumQueues);
 }
+
+HSAKMT_STATUS BaseDebug::ResumeQueues(unsigned int *NumQueues,
+                                       HSA_QUEUEID *Queues,
+                                       uint32_t *QueueIds)
+{
+    struct kfd_ioctl_dbg_trap_args args = {0};
+
+    memset(&args, 0x00, sizeof(args));
+
+    args.pid = m_Pid;
+    args.op = KFD_IOC_DBG_TRAP_RESUME_QUEUES;
+    args.resume_queues.num_queues = *NumQueues;
+    args.resume_queues.queue_array_ptr = (uint64_t)QueueIds;
+
+    return hsaKmtDebugTrapIoctl(&args, Queues, (HSAuint64 *)NumQueues);
+}
