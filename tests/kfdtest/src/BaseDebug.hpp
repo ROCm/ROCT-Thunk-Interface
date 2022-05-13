@@ -47,6 +47,9 @@ class BaseDebug {
     HSAKMT_STATUS SuspendQueues(unsigned int *NumQueues, HSA_QUEUEID *Queues, uint32_t *QueueIds,
                                 uint64_t ExceptionsToClear);
     HSAKMT_STATUS ResumeQueues(unsigned int *NumQueues, HSA_QUEUEID *Queues, uint32_t *QueueIds);
+    HSAKMT_STATUS QueryDebugEvent(uint64_t *Exceptions,
+                                  uint32_t *GpuId, uint32_t *QueueId,
+                                  int TimeoutMsec);
 
  private:
     unsigned int m_Pid;
