@@ -50,6 +50,10 @@ class BaseDebug {
     HSAKMT_STATUS QueryDebugEvent(uint64_t *Exceptions,
                                   uint32_t *GpuId, uint32_t *QueueId,
                                   int TimeoutMsec);
+    HSAKMT_STATUS QueueSnapshot(uint64_t ExceptionsToClear, uint64_t SnapshotBufAddr,
+                                uint32_t *SnapshotSize);
+    HSAKMT_STATUS DeviceSnapshot(uint64_t ExceptionsToClear, uint64_t SnapshotBuffAddr,
+                                 uint32_t *SnapshotSize);
 
  private:
     unsigned int m_Pid;
