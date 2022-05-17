@@ -61,4 +61,7 @@ extern const char *GwsAtomicIncreaseIsa;
 extern const char *jump_to_trap_gfx;
 extern const char *trap_handler_gfx;
 
+/* HitMemoryViolation */
+extern const char *trip_vmfault_gfx;
+
 #endif  // _SHADERSTORE_H_
