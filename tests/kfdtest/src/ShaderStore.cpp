@@ -78,6 +78,13 @@ const std::vector<const char*> ShaderList = {
     "       .else\n"\
     "           v_cmp_lt_u32        vcc, \\src0, \\vsrc1\n"\
     "       .endif\n"\
+    "   .endm\n"\
+    "   .macro V_CMP_EQ_U32 src0, vsrc1\n"\
+    "       .if (.amdgcn.gfx_generation_number >= 10)\n"\
+    "           v_cmp_eq_u32        vcc_lo, \\src0, \\vsrc1\n"\
+    "       .else\n"\
+    "           v_cmp_eq_u32        vcc, \\src0, \\vsrc1\n"\
+    "       .endif\n"\
     "   .endm\n"
 
 /**
@@ -611,21 +618,21 @@ const char *GwsAtomicIncreaseIsa = R"(
         s_endpgm
 )";
 
-const char *jump_to_trap_gfx = R"(
+const char *jump_to_trap_gfx = SHADER_MACROS R"(
 /*copy the parameters from scalar registers to vector registers*/
     v_mov_b32 v4, 0
     v_mov_b32 v0, s0
     v_mov_b32 v1, s1
     s_trap 1
 EXIT_LOOP:
-    v_cmp_eq_u32 vcc, v4, 0
+    V_CMP_EQ_U32 v4, 0
     s_cbranch_vccnz EXIT_LOOP
     flat_store_dword v[0:1], v4
     s_waitcnt vmcnt(0)&lgkmcnt(0)
     s_endpgm
 )";
 
-const char *trap_handler_gfx = R"(
+const char *trap_handler_gfx = SHADER_MACROS R"(
 CHECK_VMFAULT:
     /*if trap jumped to by vmfault, restore skip m0 signalling*/
     s_getreg_b32 ttmp14, hwreg(HW_REG_TRAPSTS)
@@ -672,10 +679,10 @@ RESTORE_AND_EXIT:
     s_and_b64 exec, exec, exec
     s_and_b64 vcc, vcc, vcc
     s_setreg_b32 hwreg(HW_REG_STATUS), ttmp12
-    s_rfe_b64 [ttmp0, ttmp1
+    s_rfe_b64 [ttmp0, ttmp1]
 )";
 
-const char *trip_vmfault_gfx = R"(
+const char *trip_vmfault_gfx = SHADER_MACROS R"(
     v_mov_b32 v0, 0xdeadbeef
     flat_load_dword v4, v[0:1]
     s_waitcnt 0
