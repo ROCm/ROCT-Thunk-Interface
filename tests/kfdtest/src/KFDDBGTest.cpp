@@ -410,16 +410,12 @@ TEST_F(KFDDBGTest, HitMemoryViolation) {
             uint32_t rDebug;
             int r;
 
+	    KFDBaseComponentTest::TearDown();
+	    KFDBaseComponentTest::SetUp();
+
             // Let parent become the debugger and wait for attach.
             ptrace(PTRACE_TRACEME);
             raise(SIGSTOP);
-
-            r = hsaKmtOpenKFD();
-
-            if (r != HSAKMT_STATUS_SUCCESS) {
-                WARN() << "KFD open failed in debugged process" << std::endl;
-                exit(1);
-            }
 
             r = hsaKmtRuntimeEnable(&rDebug, true);
 
@@ -429,13 +425,14 @@ TEST_F(KFDDBGTest, HitMemoryViolation) {
             }
 
             HsaMemoryBuffer isaBuf(PAGE_SIZE, defaultGPUNode, true, false, true);
-            ASSERT_SUCCESS(m_pAsm->RunAssembleBuf(trip_vmfault_gfx, isaBuf.As<char*>()));
+            ASSERT_SUCCESS(m_pAsm->RunAssembleBuf(CopyDwordIsa, isaBuf.As<char*>()));
             PM4Queue queue;
             HsaQueueResource *qResources;
             ASSERT_SUCCESS(queue.Create(defaultGPUNode));
 
             Dispatch *dispatch;
             dispatch = new Dispatch(isaBuf);
+            dispatch->SetArgs(reinterpret_cast<void*>(0x123ULL), reinterpret_cast<void*>(0x123ULL));
             dispatch->SetDim(1, 1, 1);
             dispatch->Submit(queue);
 

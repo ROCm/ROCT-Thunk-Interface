@@ -681,10 +681,3 @@ RESTORE_AND_EXIT:
     s_setreg_b32 hwreg(HW_REG_STATUS), ttmp12
     s_rfe_b64 [ttmp0, ttmp1]
 )";
-
-const char *trip_vmfault_gfx = SHADER_MACROS R"(
-    v_mov_b32 v0, 0xdeadbeef
-    flat_load_dword v4, v[0:1]
-    s_waitcnt 0
-    s_endpgm
-)";
