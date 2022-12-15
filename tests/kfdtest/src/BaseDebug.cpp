@@ -67,7 +67,7 @@ HSAKMT_STATUS BaseDebug::Attach(struct kfd_runtime_info *rInfo,
     args.enable.dbg_fd = m_Fd.fd;
     args.enable.exception_mask = exceptionEnable;
 
-    if (hsaKmtDebugTrapIoctl(&args, NULL, NULL)) {
+    if (hsaKmtDebugTrapIoctl(&args, NULL)) {
         close(m_Fd.fd);
 	unlink(m_Fd_Name);
         return HSAKMT_STATUS_ERROR;
@@ -87,7 +87,7 @@ void BaseDebug::Detach(void) {
     args.pid = m_Pid;
     args.op = KFD_IOC_DBG_TRAP_DISABLE;
 
-    hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+    hsaKmtDebugTrapIoctl(&args, NULL);
 
     close(m_Fd.fd);
     unlink(m_Fd_Name);
@@ -109,7 +109,7 @@ HSAKMT_STATUS BaseDebug::SendRuntimeEvent(uint64_t exceptions, int gpuId, int qu
     args.send_runtime_event.gpu_id;
     args.send_runtime_event.queue_id;
 
-    return hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+    return hsaKmtDebugTrapIoctl(&args, NULL);
 }
 
 void BaseDebug::SetExceptionsEnabled(uint64_t exceptions)
@@ -122,7 +122,7 @@ void BaseDebug::SetExceptionsEnabled(uint64_t exceptions)
     args.op = KFD_IOC_DBG_TRAP_SET_EXCEPTIONS_ENABLED;     
     args.set_exceptions_enabled.exception_mask = exceptions;
 
-    hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+    hsaKmtDebugTrapIoctl(&args, NULL);
 }
 
 HSAKMT_STATUS BaseDebug::SuspendQueues(unsigned int *NumQueues,
@@ -131,6 +131,8 @@ HSAKMT_STATUS BaseDebug::SuspendQueues(unsigned int *NumQueues,
                                        uint64_t ExceptionsToClear)
 {
     struct kfd_ioctl_dbg_trap_args args = {0};
+    uint32_t q_count = 0;
+    uint32_t inv_mask = KFD_DBG_QUEUE_ERROR_MASK | KFD_DBG_QUEUE_INVALID_MASK;
 
     memset(&args, 0x00, sizeof(args));
 
@@ -140,7 +142,16 @@ HSAKMT_STATUS BaseDebug::SuspendQueues(unsigned int *NumQueues,
     args.suspend_queues.queue_array_ptr = (uint64_t)QueueIds;
     args.suspend_queues.exception_mask = ExceptionsToClear;
 
-    return hsaKmtDebugTrapIoctl(&args, Queues, (HSAuint64 *)NumQueues);
+    HSAKMT_STATUS ret = hsaKmtDebugTrapIoctl(&args, Queues);
+
+    for (int i = 0; i < *NumQueues; i++) {
+        if (!(QueueIds[i] & inv_mask))
+        q_count++;
+    }
+
+    *NumQueues = q_count;
+
+    return ret;
 }
 
 HSAKMT_STATUS BaseDebug::ResumeQueues(unsigned int *NumQueues,
@@ -148,6 +159,8 @@ HSAKMT_STATUS BaseDebug::ResumeQueues(unsigned int *NumQueues,
                                        uint32_t *QueueIds)
 {
     struct kfd_ioctl_dbg_trap_args args = {0};
+    uint32_t q_count = 0;
+    uint32_t inv_mask = KFD_DBG_QUEUE_ERROR_MASK | KFD_DBG_QUEUE_INVALID_MASK;
 
     memset(&args, 0x00, sizeof(args));
 
@@ -156,7 +169,16 @@ HSAKMT_STATUS BaseDebug::ResumeQueues(unsigned int *NumQueues,
     args.resume_queues.num_queues = *NumQueues;
     args.resume_queues.queue_array_ptr = (uint64_t)QueueIds;
 
-    return hsaKmtDebugTrapIoctl(&args, Queues, (HSAuint64 *)NumQueues);
+    HSAKMT_STATUS ret = hsaKmtDebugTrapIoctl(&args, Queues);
+
+    for (int i = 0; i < *NumQueues; i++) {
+        if (!(QueueIds[i] & inv_mask))
+        q_count++;
+    }
+
+    *NumQueues = q_count;
+
+    return ret;
 }
 
 HSAKMT_STATUS BaseDebug::QueryDebugEvent(uint64_t *Exceptions,
@@ -181,7 +203,7 @@ HSAKMT_STATUS BaseDebug::QueryDebugEvent(uint64_t *Exceptions,
     args.op = KFD_IOC_DBG_TRAP_QUERY_DEBUG_EVENT;
     args.query_debug_event.exception_mask = *Exceptions;
 
-    result = hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+    result = hsaKmtDebugTrapIoctl(&args, NULL);
 
     *Exceptions = args.query_debug_event.exception_mask;
 
@@ -196,7 +218,7 @@ HSAKMT_STATUS BaseDebug::QueryDebugEvent(uint64_t *Exceptions,
 
 HSAKMT_STATUS BaseDebug::QueueSnapshot(uint64_t ExceptionsToClear,
                                   uint64_t SnapshotBufAddr,
-                                  uint32_t *SnapshotSize)
+                                  uint32_t *NumQueues)
 {
     struct kfd_ioctl_dbg_trap_args args = {0};
     HSAKMT_STATUS result;
@@ -207,18 +229,19 @@ HSAKMT_STATUS BaseDebug::QueueSnapshot(uint64_t ExceptionsToClear,
     args.op = KFD_IOC_DBG_TRAP_GET_QUEUE_SNAPSHOT;
     args.queue_snapshot.exception_mask = ExceptionsToClear;
     args.queue_snapshot.snapshot_buf_ptr = SnapshotBufAddr;
-    args.queue_snapshot.buf_size = *SnapshotSize;
+    args.queue_snapshot.num_queues = *NumQueues;
+    args.queue_snapshot.entry_size = sizeof(struct kfd_queue_snapshot_entry);
 
-    result = hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+    result = hsaKmtDebugTrapIoctl(&args, NULL);
 
-    *SnapshotSize = args.queue_snapshot.buf_size;
+    *NumQueues = args.queue_snapshot.num_queues;
 
     return result;
 }
 
 HSAKMT_STATUS BaseDebug::DeviceSnapshot(uint64_t ExceptionsToClear,
                                   uint64_t SnapshotBufAddr,
-                                  uint32_t *SnapshotSize)
+                                  uint32_t *NumDevices)
 {
     struct kfd_ioctl_dbg_trap_args args = {0};
     HSAKMT_STATUS result;
@@ -229,11 +252,12 @@ HSAKMT_STATUS BaseDebug::DeviceSnapshot(uint64_t ExceptionsToClear,
     args.op = KFD_IOC_DBG_TRAP_GET_DEVICE_SNAPSHOT;
     args.device_snapshot.exception_mask = ExceptionsToClear;
     args.device_snapshot.snapshot_buf_ptr = SnapshotBufAddr;
-    args.device_snapshot.buf_size = *SnapshotSize;
+    args.device_snapshot.num_devices = *NumDevices;
+    args.queue_snapshot.entry_size = sizeof(struct kfd_dbg_device_info_entry);
 
-    result = hsaKmtDebugTrapIoctl(&args, NULL, NULL);
+    result = hsaKmtDebugTrapIoctl(&args, NULL);
 
-    *SnapshotSize = args.device_snapshot.buf_size;
+    *NumDevices = args.device_snapshot.num_devices;
 
     return result;
 }

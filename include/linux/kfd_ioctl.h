@@ -113,7 +113,22 @@ struct kfd_dbg_device_info_entry {
 	__u64 gpuvm_base;
 	__u64 gpuvm_limit;
 	__u32 gpu_id;
+	__u32 location_id;
+	__u32 vendor_id;
+	__u32 device_id;
+	__u32 fw_version;
+	__u32 gfx_target_version;
+	__u32 simd_count;
+	__u32 max_waves_per_simd;
+	__u32 array_count;
+	__u32 simd_arrays_per_engine;
+	__u32 capability;
+	__u32 debug_prop;
+	__u32 revision_id;
+	__u32 subsystem_vendor_id;
+	__u32 subsystem_device_id;
 	__u32 pad;
+
 };
 
 /* For kfd_ioctl_set_memory_policy_args.default_policy and alternate_policy */
@@ -1330,20 +1345,33 @@ struct kfd_ioctl_dbg_trap_query_exception_info_args {
  *     Get queue information.
  *
  *     @exception_mask	 (IN)	  - exceptions raised to clear
- *     @snapshot_buf_ptr (IN)	  - queue snapshot entry buffer
- *				    (see kfd_queue_snapshot_entry)
- *     @buf_size	 (IN/OUT) - number of queue snapshot entries
+ *     @snapshot_buf_ptr (IN)	  - queue snapshot entry buffer (see kfd_queue_snapshot_entry)
+ *     @num_queues	 (IN/OUT) - number of queue snapshot entries
+ *         The debugger specifies the size of the array allocated in @num_queues.
+ *         KFD returns the number of queues that actually existed. If this is
+ *         larger than the size specified by the debugger, KFD will not overflow
+ *         the array allocated by the debugger.
  *
+ *     @entry_size	 (IN/OUT) - size per entry in bytes
+ *         The debugger specifies sizeof(struct kfd_queue_snapshot_entry) in
+ *         @entry_size. KFD returns the number of bytes actually populated per
+ *         entry. The debugger should use the KFD_IOCTL_MINOR_VERSION to determine,
+ *         which fields in struct kfd_queue_snapshot_entry are valid. This allows
+ *         growing the ABI in a backwards compatible manner.
+ *         Note that entry_size(IN) should still be used to stride the snapshot buffer in the
+ *         event that it's larger than actual kfd_queue_snapshot_entry.
+ *
+ *     Generic errors apply (see kfd_dbg_trap_operations).
  *     Return - 0 on SUCCESS.
- *              Copies @size(IN) queue snapshot entries into @snapshot_buf_ptr if
- *              @buf_size(IN) > 0.
- *              Otherwise return @buf_size(OUT) queue snapshot entries that exist.
+ *              Copies @num_queues(IN) queue snapshot entries of size @entry_size(IN)
+ *              into @snapshot_buf_ptr if @num_queues(IN) > 0.
+ *              Otherwise return @num_queues(OUT) queue snapshot entries that exist.
  */
 struct kfd_ioctl_dbg_trap_queue_snapshot_args {
 	__u64 exception_mask;
 	__u64 snapshot_buf_ptr;
-	__u32 buf_size;
-	__u32 pad;
+	__u32 num_queues;
+	__u32 entry_size;
 };
 
 /**
@@ -1353,21 +1381,33 @@ struct kfd_ioctl_dbg_trap_queue_snapshot_args {
  *     Get device information.
  *
  *     @exception_mask	 (IN)	  - exceptions raised to clear
- *     @snapshot_buf_ptr (IN)	  - pointer to snapshot buffer (see kfd_device_snapshot_entry)
- *     @buf_size	 (IN/OUT) - number of debug devices to snapshot
+ *     @snapshot_buf_ptr (IN)	  - pointer to snapshot buffer (see kfd_dbg_device_info_entry)
+ *     @num_devices	 (IN/OUT) - number of debug devices to snapshot
+ *         The debugger specifies the size of the array allocated in @num_devices.
+ *         KFD returns the number of devices that actually existed. If this is
+ *         larger than the size specified by the debugger, KFD will not overflow
+ *         the array allocated by the debugger.
  *
+ *     @entry_size	 (IN/OUT) - size per entry in bytes
+ *         The debugger specifies sizeof(struct kfd_dbg_device_info_entry) in
+ *         @entry_size. KFD returns the number of bytes actually populated. The
+ *         debugger should use KFD_IOCTL_MINOR_VERSION to determine, which fields
+ *         in struct kfd_dbg_device_info_entry are valid. This allows growing the
+ *         ABI in a backwards compatible manner.
+ *         Note that entry_size(IN) should still be used to stride the snapshot buffer in the
+ *         event that it's larger than actual kfd_dbg_device_info_entry.
+ *
+ *     Generic errors apply (see kfd_dbg_trap_operations).
  *     Return - 0 on SUCCESS.
- *            - ENOSPC if requested number of debug devices is less than the
- *		actual number of debug devices.
- *	        Copies @buf_size(OUT) number of device snapshot entries into
- *		@snapshot_buf_ptr.
- *	        Actual number of device snapshot entries returned in @buf_size.
+ *              Copies @num_devices(IN) device snapshot entries of size @entry_size(IN)
+ *              into @snapshot_buf_ptr if @num_devices(IN) > 0.
+ *              Otherwise return @num_devices(OUT) queue snapshot entries that exist.
  */
 struct kfd_ioctl_dbg_trap_device_snapshot_args {
 	__u64 exception_mask;
 	__u64 snapshot_buf_ptr;
-	__u32 buf_size;
-	__u32 pad;
+	__u32 num_devices;
+	__u32 entry_size;
 };
 
 /**

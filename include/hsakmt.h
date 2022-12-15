@@ -657,8 +657,8 @@ hsaKmtRuntimeDisable(void);
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(
     struct kfd_ioctl_dbg_trap_args *arg,
-    HSA_QUEUEID *Queues,
-    HSAuint64 *ReturnOut);
+    HSA_QUEUEID *Queue //TODO: check back and remove if suspend call gets implemented
+    );
 
 /**
   Gets GPU and CPU clock counters for particular Node

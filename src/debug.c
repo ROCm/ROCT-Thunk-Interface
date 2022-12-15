@@ -331,8 +331,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeDisable(void)
 }
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(struct kfd_ioctl_dbg_trap_args *args,
-					HSA_QUEUEID *Queues,
-					HSAuint64 *ReturnOut)
+					HSA_QUEUEID *Queues)
 {
 	HSAKMT_STATUS result;
 
@@ -362,9 +361,6 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(struct kfd_ioctl_dbg_trap_args *arg
 		result = HSAKMT_STATUS_SUCCESS;
 	else
 		result = HSAKMT_STATUS_ERROR;
-
-	if (ReturnOut)
-		*ReturnOut = (HSAuint64)err;
 
 	return result;
 }

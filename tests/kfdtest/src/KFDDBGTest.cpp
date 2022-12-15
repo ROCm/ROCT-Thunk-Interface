@@ -476,14 +476,14 @@ TEST_F(KFDDBGTest, HitMemoryViolation) {
 	    ptrace(PTRACE_CONT, childPid, NULL, NULL);
 
             const std::vector<int> gpuNodes = m_NodeInfo.GetNodesWithGPU();
-            uint32_t snapshotSize = gpuNodes.size();
-            struct kfd_dbg_device_info_entry deviceInfo[snapshotSize] = {0};
+            uint32_t NumDevices = gpuNodes.size();
+            struct kfd_dbg_device_info_entry deviceInfo[NumDevices] = {0};
 
             // Check device snapshot aligns with memory violation on target device.
             ASSERT_SUCCESS(debug->DeviceSnapshot(memViolMask, (uint64_t)(&deviceInfo[0]),
-                                                 &snapshotSize));
-            ASSERT_EQ(snapshotSize, gpuNodes.size());
-            for (int i = 0; i < snapshotSize; i++) {
+                                                 &NumDevices));
+            ASSERT_EQ(NumDevices, gpuNodes.size());
+            for (int i = 0; i < NumDevices; i++) {
                 if (deviceInfo[i].exception_status & memViolMask) {
                     ASSERT_EQ(deviceInfo[i].gpu_id, deviceId);
                     break;
