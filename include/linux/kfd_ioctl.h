@@ -116,6 +116,9 @@ struct kfd_dbg_device_info_entry {
 	__u32 location_id;
 	__u32 vendor_id;
 	__u32 device_id;
+	__u32 revision_id;
+	__u32 subsystem_vendor_id;
+	__u32 subsystem_device_id;
 	__u32 fw_version;
 	__u32 gfx_target_version;
 	__u32 simd_count;
@@ -124,9 +127,6 @@ struct kfd_dbg_device_info_entry {
 	__u32 simd_arrays_per_engine;
 	__u32 capability;
 	__u32 debug_prop;
-	__u32 revision_id;
-	__u32 subsystem_vendor_id;
-	__u32 subsystem_device_id;
 	__u32 pad;
 
 };
