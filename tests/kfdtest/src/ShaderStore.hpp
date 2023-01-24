@@ -64,4 +64,7 @@ extern const char *trap_handler_gfx;
 /* HitMemoryViolation */
 extern const char *trip_vmfault_gfx;
 
+/* TrapOnWaveStartEnd */
+extern const char *stop_isa;
+
 #endif  // _SHADERSTORE_H_

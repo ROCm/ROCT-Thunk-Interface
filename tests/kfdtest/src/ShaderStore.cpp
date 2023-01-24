@@ -632,6 +632,20 @@ EXIT_LOOP:
     s_endpgm
 )";
 
+const char *stop_isa = SHADER_MACROS R"(
+        LOOP:
+        s_load_dword            s6, s[0:1], 0 glc
+        s_waitcnt vmcnt(0) & lgkmcnt(0)         // wait for memory reads to finish
+        s_cmp_eq_i32            s6, 0xdead  // compare input buf to stopval
+        s_cbranch_scc1          L_QUIT          // branch if notified to quit by host
+
+        s_branch LOOP
+
+        L_QUIT:
+        s_waitcnt vmcnt(0) & lgkmcnt(0)
+        s_endpgm
+)";
+
 const char *trap_handler_gfx = SHADER_MACROS R"(
 CHECK_VMFAULT:
     /*if trap jumped to by vmfault, restore skip m0 signalling*/
