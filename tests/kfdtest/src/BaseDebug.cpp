@@ -261,3 +261,26 @@ HSAKMT_STATUS BaseDebug::DeviceSnapshot(uint64_t ExceptionsToClear,
 
     return result;
 }
+
+HSAKMT_STATUS BaseDebug::SetWaveLaunchOverride(int mode,
+                                               uint32_t *enable_mask,
+                                               uint32_t *support_mask)
+{
+    struct kfd_ioctl_dbg_trap_args args = {0};
+    HSAKMT_STATUS Result;
+
+    memset(&args, 0x00, sizeof(args));
+
+    args.pid = m_Pid;
+    args.op = KFD_IOC_DBG_TRAP_SET_WAVE_LAUNCH_OVERRIDE;
+    args.launch_override.override_mode = mode;
+    args.launch_override.enable_mask = *enable_mask;
+    args.launch_override.support_request_mask = *support_mask;
+
+    Result = hsaKmtDebugTrapIoctl(&args, NULL);
+
+    *enable_mask = args.launch_override.enable_mask;
+    *support_mask = args.launch_override.support_request_mask;
+
+    return Result;
+}

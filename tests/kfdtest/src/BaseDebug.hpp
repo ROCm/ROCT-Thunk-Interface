@@ -54,6 +54,7 @@ class BaseDebug {
                                 uint32_t *SnapshotSize);
     HSAKMT_STATUS DeviceSnapshot(uint64_t ExceptionsToClear, uint64_t SnapshotBuffAddr,
                                  uint32_t *SnapshotSize);
+    HSAKMT_STATUS SetWaveLaunchOverride(int mode, uint32_t *enable_mask, uint32_t *support_mask);
 
  private:
     unsigned int m_Pid;
