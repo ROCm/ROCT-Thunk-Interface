@@ -657,9 +657,10 @@ WAIT_SENDMSG:
 .else
     s_sendmsg_rtn_b32 ttmp3, sendmsg(MSG_RTN_GET_DOORBELL)
     s_waitcnt lgkmcnt(0)
-    s_and_b32 ttmp3, ttmp3, DOORBELL_ID_MASK
+    s_and_b32 ttmp3, ttmp3, 0x3ff
 .endif
     s_mov_b32 ttmp2, m0
+    s_or_b32 ttmp3, ttmp3, 0x800
     /* set m0, send interrupt and restore m0 and exit trap*/
     s_mov_b32 m0, ttmp3
     s_nop 0x0
