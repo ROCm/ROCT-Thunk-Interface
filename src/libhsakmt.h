@@ -56,7 +56,9 @@ extern HsaVersionInfo kfd_version_info;
 	do { if ((minor) > kfd_version_info.KernelInterfaceMinorVersion)\
 		return HSAKMT_STATUS_NOT_SUPPORTED; } while (0)
 
+#if !defined(PAGE_SIZE)
 extern int PAGE_SIZE;
+#endif
 extern int PAGE_SHIFT;
 
 /* VI HW bug requires this virtual address alignment */

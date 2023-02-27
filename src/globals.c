@@ -32,5 +32,7 @@ unsigned long kfd_open_count;
 unsigned long system_properties_count;
 pthread_mutex_t hsakmt_mutex = PTHREAD_MUTEX_INITIALIZER;
 bool is_dgpu;
+#if !defined(PAGE_SIZE)
 int PAGE_SIZE;
+#endif
 int PAGE_SHIFT;
