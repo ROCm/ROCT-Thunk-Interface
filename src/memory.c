@@ -136,6 +136,9 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtAllocMemory(HSAuint32 PreferredNode,
 	} else
 		*MemoryAddress = NULL;
 
+	if (MemFlags.ui32.CoarseGrain && MemFlags.ui32.ExtendedCoherent)
+		return HSAKMT_STATUS_INVALID_PARAMETER;
+
 	if (MemFlags.ui32.Scratch) {
 		*MemoryAddress = fmm_allocate_scratch(gpu_id, *MemoryAddress, SizeInBytes);
 
@@ -235,7 +238,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRegisterMemory(void *MemoryAddress,
 		return HSAKMT_STATUS_SUCCESS;
 
 	return fmm_register_memory(MemoryAddress, MemorySizeInBytes,
-				   NULL, 0, true);
+				   NULL, 0, true, false);
 }
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtRegisterMemoryToNodes(void *MemoryAddress,
@@ -261,7 +264,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRegisterMemoryToNodes(void *MemoryAddress,
 		ret = fmm_register_memory(MemoryAddress, MemorySizeInBytes,
 					  gpu_id_array,
 					  NumberOfNodes*sizeof(uint32_t),
-					  true);
+					  true, false);
 		if (ret != HSAKMT_STATUS_SUCCESS)
 			free(gpu_id_array);
 	}
@@ -279,6 +282,9 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRegisterMemoryWithFlags(void *MemoryAddress,
 	pr_debug("[%s] address %p\n",
 		__func__, MemoryAddress);
 
+	if (MemFlags.ui32.ExtendedCoherent && MemFlags.ui32.CoarseGrain)
+		return HSAKMT_STATUS_INVALID_PARAMETER;
+
 	// Registered memory should be ordinary paged host memory.
 	if ((MemFlags.ui32.HostAccess != 1) || (MemFlags.ui32.NonPaged == 1))
 		return HSAKMT_STATUS_NOT_SUPPORTED;
@@ -288,7 +294,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRegisterMemoryWithFlags(void *MemoryAddress,
 		return HSAKMT_STATUS_NOT_SUPPORTED;
 
 	ret = fmm_register_memory(MemoryAddress, MemorySizeInBytes,
-		NULL, 0, MemFlags.ui32.CoarseGrain);
+		NULL, 0, MemFlags.ui32.CoarseGrain, MemFlags.ui32.ExtendedCoherent);
 
 	return ret;
 }
