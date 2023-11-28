@@ -75,6 +75,11 @@ hsaKmtSetXNACKMode;
 hsaKmtGetXNACKMode;
 hsaKmtOpenSMI;
 hsaKmtExportDMABufHandle;
+hsaKmtPcSamplingQueryCapabilities;
+hsaKmtPcSamplingCreate;
+hsaKmtPcSamplingDestroy;
+hsaKmtPcSamplingStart;
+hsaKmtPcSamplingStop;
 
 local: *;
 };

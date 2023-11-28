@@ -1026,6 +1026,59 @@ hsaKmtReturnAsanHeaderPage(
     void *addr     // IN: Start of othe virtual address page
 );
 
+/**
+   Query device PC Sampling capabilities
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtPcSamplingQueryCapabilities(
+    HSAuint32 NodeId,             // IN: GPU node_id
+    void *sample_info,            // IN: Pointer to array of HSAPcSamplingInfo
+    HSAuint32 sample_info_sz,     // IN: Size of sampling_info in units of HSAPcSamplingInfo
+    HSAuint32 *sz_needed          // OUT: If sampling_info_sz is too small, sample_info_sz needed
+);
+
+/**
+   Create PC Sampling Session
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtPcSamplingCreate(
+  HSAuint32 node_id,              // IN: GPU node_id
+  HsaPcSamplingInfo *sample_info, // IN: PC Sampling configuration requested
+  HsaPcSamplingTraceId *traceId   // OUT: Unique PC Sampling trace Id
+);
+
+/**
+   Destroy PC Sampling Session
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtPcSamplingDestroy(
+    HSAuint32 NodeId,             // IN: GPU node_id
+    HsaPcSamplingTraceId traceId  // IN: PC Sampling trace Id
+);
+
+/**
+   Start PC Sampling Session
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtPcSamplingStart(
+    HSAuint32 NodeId,            // IN: GPU node_id
+    HsaPcSamplingTraceId traceId // IN: PC Sampling trace Id
+);
+
+/**
+   Stop PC Sampling Session
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtPcSamplingStop(
+    HSAuint32 NodeId,            // IN: GPU node_id
+    HsaPcSamplingTraceId traceId // IN: PC Sampling trace Id
+);
+
 #ifdef __cplusplus
 }   //extern "C"
 #endif
