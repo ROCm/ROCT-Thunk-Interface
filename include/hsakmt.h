@@ -774,6 +774,24 @@ hsaKmtDbgGetQueueData(
     bool suspend_queues //In
     );
 
+/**   
+  Check whether gpu firmware and kernel support debugging
+*/
+HSAKMT_STATUS
+HSAKMTAPI
+hsaKmtCheckRuntimeDebugSupport(
+    void
+    );
+
+/**
+  Debug ops call primarily used for KFD testing
+ */
+HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(
+    struct kfd_ioctl_dbg_trap_args *arg,
+    HSA_QUEUEID *Queues,
+    HSAuint64 *DebugReturn
+    );
+
 /**
   Gets GPU and CPU clock counters for particular Node
 */
@@ -1031,4 +1049,3 @@ hsaKmtReturnAsanHeaderPage(
 #endif
 
 #endif //_HSAKMT_H_
-

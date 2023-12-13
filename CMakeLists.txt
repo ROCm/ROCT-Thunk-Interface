@@ -212,9 +212,7 @@ install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INS
   COMPONENT devel PATTERN "linux" EXCLUDE )
 
 # Option to build header path migration helpers.
-if( NOT ENABLE_ASAN_PACKAGING )
-  option(INCLUDE_PATH_COMPATIBILITY "Generate backward compatible headers and include paths.  Use of these headers will warn when included." ON)
-endif()
+option(INCLUDE_PATH_COMPATIBILITY "Generate backward compatible headers and include paths.  Use of these headers will warn when included." OFF)
 
 if(INCLUDE_PATH_COMPATIBILITY)
   # To enable/disable #error in wrapper header files
@@ -287,7 +285,7 @@ endif()
 # TODO: Add support for relocatable packages.
 configure_file ( libhsakmt.pc.in libhsakmt.pc @ONLY )
 
-install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/libhsakmt.pc DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig COMPONENT devel)
+install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/libhsakmt.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT devel)
 
 ###########################
 # Packaging directives

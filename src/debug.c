@@ -268,7 +268,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtDbgAddressWatch(HSAuint32 NodeId,
 #define HSA_RUNTIME_ENABLE_MAX_MAJOR   1
 #define HSA_RUNTIME_ENABLE_MIN_MINOR   13
 
-static HSAKMT_STATUS checkRuntimeDebugSupport(void) {
+HSAKMT_STATUS hsaKmtCheckRuntimeDebugSupport(void) {
 	HsaNodeProperties node = {0};
 	HsaSystemProperties props = {0};
 	HsaVersionInfo versionInfo = {0};
@@ -306,7 +306,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeEnable(void *rDebug,
 					    bool setupTtmp)
 {
 	struct kfd_ioctl_runtime_enable_args args = {0};
-	HSAKMT_STATUS result = checkRuntimeDebugSupport();
+	HSAKMT_STATUS result = hsaKmtCheckRuntimeDebugSupport();
 
 	if (result)
 		return result;
@@ -332,7 +332,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeEnable(void *rDebug,
 HSAKMT_STATUS HSAKMTAPI hsaKmtRuntimeDisable(void)
 {
 	struct kfd_ioctl_runtime_enable_args args = {0};
-	HSAKMT_STATUS result = checkRuntimeDebugSupport();
+	HSAKMT_STATUS result = hsaKmtCheckRuntimeDebugSupport();
 
 	if (result)
 		return result;
@@ -511,4 +511,42 @@ free_data:
 		free(queue_ids);
 
 	return HSAKMT_STATUS_ERROR;
+}
+
+HSAKMT_STATUS HSAKMTAPI hsaKmtDebugTrapIoctl(struct kfd_ioctl_dbg_trap_args *args,
+					HSA_QUEUEID *Queues,
+					HSAuint64 *DebugReturn)
+{
+	HSAKMT_STATUS result;
+
+	CHECK_KFD_OPEN();
+
+	if (Queues) {
+		int num_queues = args->op == KFD_IOC_DBG_TRAP_SUSPEND_QUEUES ?
+						args->suspend_queues.num_queues :
+						args->resume_queues.num_queues;
+		void *queue_ptr = args->op == KFD_IOC_DBG_TRAP_SUSPEND_QUEUES ?
+						(void *)args->suspend_queues.queue_array_ptr :
+						(void *)args->resume_queues.queue_array_ptr;
+
+		memcpy(queue_ptr, convert_queue_ids(num_queues, Queues),
+						num_queues * sizeof(uint32_t));
+	}
+
+	long err = kmtIoctl(kfd_fd, AMDKFD_IOC_DBG_TRAP, args);
+	if (DebugReturn)
+		*DebugReturn = err;
+
+	if (args->op == KFD_IOC_DBG_TRAP_SUSPEND_QUEUES &&
+				err >= 0 && err <= args->suspend_queues.num_queues)
+		result = HSAKMT_STATUS_SUCCESS;
+	else if (args->op == KFD_IOC_DBG_TRAP_RESUME_QUEUES &&
+				err >= 0 && err <= args->resume_queues.num_queues)
+		result = HSAKMT_STATUS_SUCCESS;
+	else if (err == 0)
+		result = HSAKMT_STATUS_SUCCESS;
+	else
+		result = HSAKMT_STATUS_ERROR;
+
+	return result;
 }

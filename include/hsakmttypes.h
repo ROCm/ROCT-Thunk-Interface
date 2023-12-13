@@ -566,7 +566,8 @@ typedef struct _HsaMemFlags
             unsigned int Uncached:      1; // Caching flag for fine-grained memory on A+A HW platform
             unsigned int NoAddress:     1; // only do vram allocation, return a handle, not allocate virtual address.
             unsigned int OnlyAddress:   1; // only do virtal address allocation without vram allocation.
-            unsigned int Reserved:     12;
+            unsigned int ExtendedCoherent: 1;  // system-scope coherence on atomic instructions
+            unsigned int Reserved:     11;
 
         } ui32;
         HSAuint32 Value;
@@ -1043,6 +1044,21 @@ typedef struct _HsaMemoryAccessFault
     HSA_EVENTID_MEMORYFLAGS         Flags;              // event flags
 } HsaMemoryAccessFault;
 
+typedef enum _HSA_EVENTID_HW_EXCEPTION_CAUSE
+{
+    HSA_EVENTID_HW_EXCEPTION_GPU_HANG  = 0, // GPU Hang
+    HSA_EVENTID_HW_EXCEPTION_ECC       = 1, // SRAM ECC error
+} HSA_EVENTID_HW_EXCEPTION_CAUSE;
+
+// data associated with HSA_EVENTID_HW_EXCEPTION
+typedef struct _HsaHwException
+{
+    HSAuint32                       NodeId;    // Node Id where the memory exception occured
+    HSAuint32                       ResetType;
+    HSAuint32                       MemoryLost;
+    HSA_EVENTID_HW_EXCEPTION_CAUSE  ResetCause;
+} HsaHwException;
+
 typedef struct _HsaEventData
 {
     HSA_EVENTTYPE   EventType;      //event type
@@ -1061,6 +1077,8 @@ typedef struct _HsaEventData
         // data associated with HSA_EVENTTYPE_MEMORY
         HsaMemoryAccessFault    MemoryAccessFault;
 
+        // data associated with HSA_EVENTTYPE_HW_EXCEPTION
+        HsaHwException          HwException;
     } EventData;
 
     // the following data entries are internal to the KFD & thunk itself.
@@ -1372,6 +1390,7 @@ typedef enum _HSA_SVM_FLAGS {
 	HSA_SVM_FLAG_GPU_EXEC    = 0x00000010, // Allow execution on GPU
 	HSA_SVM_FLAG_GPU_READ_MOSTLY = 0x00000020, // GPUs mostly read, may allow similar optimizations as RO, but writes fault
 	HSA_SVM_FLAG_GPU_ALWAYS_MAPPED = 0x00000040, // Keep GPU memory mapping always valid as if XNACK is disable
+	HSA_SVM_FLAG_EXT_COHERENT = 0x00000080, //  Fine grained coherency between all devices using device-scope atomics
 } HSA_SVM_FLAGS;
 
 typedef enum _HSA_SVM_ATTR_TYPE {

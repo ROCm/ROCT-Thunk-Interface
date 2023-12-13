@@ -69,6 +69,8 @@ PERMANENT_BLACKLIST_ALL_ASICS=\
 # KFDEvictTest.BurstyTest (ROCMOPS-464)
 # KFDEvictTest.BurstyTest (SWDEV-291256)
 # KFDEvictTest.BurstyTest (KFD-425)
+# KFDDBGTest.SuspendQueues (SWDEV-417850)
+# KFDDBGTest.HitAddressWatch (SWDEV-420281)
 TEMPORARY_BLACKLIST_ALL_ASICS=\
 "KFDQMTest.GPUDoorbellWrite:"\
 "KFDQMTest.mGPUShareBO:"\
@@ -76,7 +78,9 @@ TEMPORARY_BLACKLIST_ALL_ASICS=\
 "KFDMemoryTest.CacheInvalidateOnRemoteWrite:"\
 "KFDEvictTest.BurstyTest:"\
 "KFDHWSTest.*:"\
-"KFDSVMRangeTest.ReadOnlyRangeTest*"
+"KFDSVMRangeTest.ReadOnlyRangeTest*:"\
+"KFDDBGTest.SuspendQueues:"\
+"KFDDBGTest.HitAddressWatch"
 
 BLACKLIST_ALL_ASICS=\
 "$PERMANENT_BLACKLIST_ALL_ASICS:"\
@@ -122,12 +126,14 @@ BLACKLIST_GFX10_NV2X=\
 
 # KFDQMTest.MultipleCpQueuesStressDispatch  - SWDEV-409990
 # KFDMemoryTest.FlatScratchAccess           - SWDEV-329877
+# KFDGWSTest.*: GFX11 will no longer use global wave sync
 BLACKLIST_GFX11=\
 "KFDQMTest.CreateAqlCpQueue:"\
 "KFDQMTest.MultipleCpQueuesStressDispatch:"\
 "KFDCWSRTest.InterruptRestore:"\
 "KFDPerfCountersTest.*:"\
-"KFDMemoryTest.FlatScratchAccess"
+"KFDMemoryTest.FlatScratchAccess:"\
+"KFDGWSTest.*"
 
 # KFDQMTest.CpuWriteCoherence fails. 0 dwordsAvailable (KFD-338)
 # KFDMemoryTest.MemoryRegister fails on SDMA queue creation (KFD-337)
@@ -299,6 +305,14 @@ FILTER[gfx1102]=\
 "$BLACKLIST_GFX11"
 
 FILTER[gfx1103]=\
+"$BLACKLIST_ALL_ASICS:"\
+"$BLACKLIST_GFX11"
+
+FILTER[gfx1150]=\
+"$BLACKLIST_ALL_ASICS:"\
+"$BLACKLIST_GFX11"
+
+FILTER[gfx1151]=\
 "$BLACKLIST_ALL_ASICS:"\
 "$BLACKLIST_GFX11"
 
