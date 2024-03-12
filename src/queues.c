@@ -509,7 +509,8 @@ static int handle_concrete_asic(struct queue *q,
 		q->total_mem_alloc_size = (q->ctx_save_restore_size +
 					q->debug_memory_size) * node.NumXcc;
 
-		svm_api = node.Capability.ui32.SVMAPISupported;
+		svm_api = node.Capability.ui32.SVMAPISupported &&
+			  (node.EngineId.ui32.Major < 11 || node.DeviceId == 0x7461);
 
 		/* Allocate unified memory for context save restore
 		 * area on dGPU.
