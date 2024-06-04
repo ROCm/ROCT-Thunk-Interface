@@ -1063,6 +1063,7 @@ static HSAKMT_STATUS topology_sysfs_get_node_props(uint32_t node_id,
 	char *read_buf, *p, *envvar, dummy = '\0';
 	char prop_name[256];
 	char path[256];
+	char per_device_override_name[32] = "HSA_OVERRIDE_GFX_VERSION", node_id_string[4] = "\0";
 	unsigned long long prop_val = 0;
 	uint32_t prog, major = 0, minor = 0, step = 0;
 	int read_size;
@@ -1209,8 +1210,9 @@ static HSAKMT_STATUS topology_sysfs_get_node_props(uint32_t node_id,
 
 	hsa_gfxip = find_hsa_gfxip_device(props->DeviceId, gfxv_major);
 	if (hsa_gfxip || gfxv) {
-		envvar = getenv("HSA_OVERRIDE_GFX_VERSION");
-		if (envvar) {
+		snprintf(node_id_string, 3, "_%d", node_id);
+		strcat(per_device_override_name, node_id_string);
+		if ((envvar = getenv(per_device_override_name)) || (envvar = getenv("HSA_OVERRIDE_GFX_VERSION"))) {
 			/* HSA_OVERRIDE_GFX_VERSION=major.minor.stepping */
 			if ((sscanf(envvar, "%u.%u.%u%c",
 					&major, &minor, &step, &dummy) != 3) ||
