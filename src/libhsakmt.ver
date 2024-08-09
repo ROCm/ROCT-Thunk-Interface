@@ -87,6 +87,8 @@ hsaKmtPcSamplingCreate;
 hsaKmtPcSamplingDestroy;
 hsaKmtPcSamplingStart;
 hsaKmtPcSamplingStop;
+hsaKmtAllocMemoryAlign;
+hsaKmtPcSamplingSupport;
 
 local: *;
 };
