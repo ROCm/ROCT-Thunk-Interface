@@ -34,6 +34,8 @@ set ( CPACK_PACKAGE_CONTACT "Advanced Micro Devices Inc." )
 set ( CPACK_PACKAGE_DESCRIPTION "This package includes kfdtest, the list of excluded tests for each ASIC, and a convenience script to run the test suite" )
 set ( CPACK_PACKAGE_DESCRIPTION_SUMMARY "Test suite for ROCK/KFD" )
 
+include ( GNUInstallDirs )
+
 # Make proper version for appending
 # Default Value is 99999, setting it first
 set(ROCM_VERSION_FOR_PACKAGE "99999")
@@ -104,9 +106,9 @@ if( DEFINED ENV{LIBHSAKMT_PATH} )
     message ( "LIBHSAKMT_PATH environment variable is set" )
 else()
     if ( ${ROCM_INSTALL_PATH} )
-       set ( ENV{PKG_CONFIG_PATH} ${ROCM_INSTALL_PATH}/share/pkgconfig )
+       set ( ENV{PKG_CONFIG_PATH} ${ROCM_INSTALL_PATH}/${CMAKE_INSTALL_LIBDIR}/pkgconfig )
     else()
-       set ( ENV{PKG_CONFIG_PATH} /opt/rocm/share/pkgconfig )
+       set ( ENV{PKG_CONFIG_PATH} /opt/rocm/${CMAKE_INSTALL_LIBDIR}/pkgconfig )
     endif()
 
     pkg_check_modules(HSAKMT libhsakmt)
