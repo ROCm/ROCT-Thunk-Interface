@@ -1,5 +1,8 @@
 # ROCt Library
 
+# NOTE: This repository has been deprecated. Please refer to https://github.com/ROCm/ROCR-Runtime for all future work on libhsakmt/ROCT/thunk.
+
+
 This repository includes the user-mode API interfaces used to interact with the ROCk driver.
 
 Starting at 1.7 release, ROCt uses drm render device. This requires the user to belong to video group. Add the user account to video group with "sudo usermod -a -G video _username_" command if the user if not part of video group yet.
