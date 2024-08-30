@@ -278,7 +278,14 @@ while [ "$1" != "" ]; do
 done
 
 # If the SMI is missing, just report and continue
-SMI="$(find /opt/rocm* -type l -name rocm-smi | tail -1)"
+SMI="$(find /opt/rocm* -type l -name rocm-smi 2>/dev/null | tail -1)"
+if [ -z ${SMI} ]; then
+    if [ -x ${BIN_DIR}/rocm-smi ]; then
+	SMI=${BIN_DIR}/rocm-smi
+    else
+	SMI=`which rocm-smi`
+    fi
+fi
 if [ "$FORCE_HIGH" == "true" ]; then
     if [ -e "$SMI" ]; then
         OLDPERF=$($SMI -p | awk '/Performance Level:/ {print $NF; exit}')
