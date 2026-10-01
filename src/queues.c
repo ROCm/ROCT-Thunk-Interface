@@ -95,6 +95,8 @@ uint32_t get_vgpr_size_per_cu(uint32_t gfxv)
 
 	else if (gfxv == GFX_VERSION_PLUM_BONITO ||
 		 gfxv == GFX_VERSION_WHEAT_NAS ||
+		 gfxv == GFX_VERSION_GFX1150 ||
+		 gfxv == GFX_VERSION_GFX1151 ||
 		 gfxv == GFX_VERSION_GFX1200 ||
 		 gfxv == GFX_VERSION_GFX1201)
 		vgpr_size = 0x60000;
